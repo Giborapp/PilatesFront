@@ -1,0 +1,17 @@
+{
+  "name": "Pilates Manager",
+  "short_name": "Pilates",
+  "description": "Gestao SaaS para estudios de Pilates",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#1f7a6d",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

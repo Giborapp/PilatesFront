@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(app)/layout,_N_T_/(app)/alunos/layout,_N_T_/(app)/alunos/novo/layout,_N_T_/(app)/alunos/novo/page,_N_T_/alunos/novo"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/!KGFwcCk/alunos/novo/__PAGE__",
+    "/!KGFwcCk/alunos/novo",
+    "/!KGFwcCk/alunos",
+    "/!KGFwcCk",
+    "/_index",
+    "/_head"
+  ]
+}

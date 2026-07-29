@@ -1,0 +1,22 @@
+{
+  "name": "frontpilates",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "pnpm --filter @pilates-manager/web dev",
+    "build": "pnpm --filter @pilates-manager/web build",
+    "start": "pnpm --filter @pilates-manager/web start",
+    "start:local": "pnpm --filter @pilates-manager/web start:local",
+    "lint": "pnpm --filter @pilates-manager/web lint",
+    "typecheck": "pnpm --filter @pilates-manager/web typecheck",
+    "test": "pnpm --filter @pilates-manager/web test",
+    "test:e2e": "pnpm --filter @pilates-manager/web test:e2e",
+    "format": "pnpm --filter @pilates-manager/web format",
+    "openapi": "pnpm --filter @pilates-manager/web openapi"
+  },
+  "devDependencies": {
+    "next": "16.2.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  }
+}

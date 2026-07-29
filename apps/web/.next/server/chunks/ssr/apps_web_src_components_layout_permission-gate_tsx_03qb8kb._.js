@@ -1,0 +1,3 @@
+module.exports=[19162,a=>{"use strict";var b=a.i(91966),c=a.i(1319),d=a.i(36085),e=a.i(65840);a.s(["PermissionGate",0,function({permission:a,children:f,fallback:g}){let{staff:h}=(0,d.useAuth)();return(0,c.hasPermission)(h?.permissions,a)?(0,b.jsx)(b.Fragment,{children:f}):g??(0,b.jsx)(e.EmptyState,{title:"Voce nao tem permissao",description:"O acesso a esta area depende de permissao liberada pelo backend."})}])}];
+
+//# sourceMappingURL=apps_web_src_components_layout_permission-gate_tsx_03qb8kb._.js.map
