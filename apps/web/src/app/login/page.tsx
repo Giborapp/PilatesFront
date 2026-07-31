@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { Eye, EyeOff } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
-import { apiRequest } from '@/lib/api';
-import { useAuth, StudioDevice } from '@/features/auth/auth-provider';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { apiRequest } from "@/lib/api";
+import { useAuth, StudioDevice } from "@/features/auth/auth-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type LoginResponse = {
   studio: {
@@ -18,23 +18,33 @@ type LoginResponse = {
   deviceExpiresAt: string;
 };
 
+type Mode = "login" | "register";
+
 export default function LoginPage() {
   const router = useRouter();
   const { setDeviceOnly } = useAuth();
-  const [email, setEmail] = useState('demo@pilates.local');
-  const [password, setPassword] = useState('Demo@123456');
+  const [mode, setMode] = useState<Mode>("login");
+  const [email, setEmail] = useState("demo@pilates.local");
+  const [password, setPassword] = useState("Demo@123456");
+  const [studioName, setStudioName] = useState("");
+  const [adminName, setAdminName] = useState("");
+  const [adminPin, setAdminPin] = useState("");
+  const [professionalName, setProfessionalName] = useState("");
+  const [professionalPin, setProfessionalPin] = useState("");
+  const [receptionName, setReceptionName] = useState("");
+  const [receptionPin, setReceptionPin] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
-    const result = await apiRequest<LoginResponse>('/auth/studio/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, deviceName: 'Web' }),
+    const result = await apiRequest<LoginResponse>("/auth/studio/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password, deviceName: "Web" }),
     });
 
     setLoading(false);
@@ -53,44 +63,248 @@ export default function LoginPage() {
       },
     };
     setDeviceOnly(device);
-    router.replace('/unlock');
+    router.replace("/unlock");
+  }
+
+  async function handleRegister(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const result = await apiRequest<LoginResponse>("/auth/studio/register", {
+      method: "POST",
+      body: JSON.stringify({
+        studioName,
+        email,
+        password,
+        adminName,
+        adminPin,
+        professionalName: professionalName || undefined,
+        professionalPin: professionalPin || undefined,
+        receptionName: receptionName || undefined,
+        receptionPin: receptionPin || undefined,
+        deviceName: "Web",
+      }),
+    });
+
+    setLoading(false);
+
+    if (!result.ok) {
+      setError(result.error.message);
+      return;
+    }
+
+    setDeviceOnly({
+      connected: true,
+      studio: {
+        id: result.data.studio.id,
+        name: result.data.studio.name,
+        timezone: result.data.studio.timezone,
+      },
+    });
+    router.replace("/unlock");
+  }
+
+  function changeMode(nextMode: Mode): void {
+    setMode(nextMode);
+    setError("");
   }
 
   return (
     <main className="grid min-h-screen place-items-center bg-background p-6">
-      <section className="w-full max-w-md rounded-lg border border-border bg-panel p-6 shadow-sm">
-        <p className="text-sm font-bold uppercase text-primary">Pilates Manager</p>
-        <h1 className="mt-2 text-2xl font-semibold">Entrar no estudio</h1>
-        <p className="mt-2 text-sm text-muted">Use o e-mail e a senha geral do estudio.</p>
+      <section className="w-full max-w-xl rounded-lg border border-border bg-panel p-6 shadow-sm">
+        <p className="text-sm font-bold uppercase text-primary">
+          Pilates Manager
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold">
+          {mode === "login" ? "Entrar no estudio" : "Criar conta do estudio"}
+        </h1>
 
-        <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
-          <label className="grid gap-2 text-sm font-medium">
-            E-mail do estudio
-            <Input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" />
-          </label>
-          <label className="grid gap-2 text-sm font-medium">
-            Senha
-            <span className="relative">
+        <div className="mt-5 grid grid-cols-2 rounded-md border border-border bg-background p-1">
+          <button
+            className={
+              mode === "login"
+                ? "rounded bg-panel px-3 py-2 text-sm font-semibold shadow-sm"
+                : "px-3 py-2 text-sm font-semibold text-muted"
+            }
+            onClick={() => changeMode("login")}
+            type="button"
+          >
+            Login
+          </button>
+          <button
+            className={
+              mode === "register"
+                ? "rounded bg-panel px-3 py-2 text-sm font-semibold shadow-sm"
+                : "px-3 py-2 text-sm font-semibold text-muted"
+            }
+            onClick={() => changeMode("register")}
+            type="button"
+          >
+            Criar conta
+          </button>
+        </div>
+
+        {mode === "login" ? (
+          <form className="mt-6 grid gap-4" onSubmit={handleLogin}>
+            <label className="grid gap-2 text-sm font-medium">
+              E-mail do estudio
               <Input
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                className="pr-11"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                type="email"
+                autoComplete="email"
               />
-              <button
-                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted"
-                type="button"
-                onClick={() => setShowPassword((current) => !current)}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </span>
-          </label>
-          {error ? <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">{error}</p> : null}
-          <Button disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</Button>
-        </form>
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              Senha
+              <span className="relative">
+                <Input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  className="pr-11"
+                />
+                <button
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted"
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </span>
+            </label>
+            {error ? (
+              <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">
+                {error}
+              </p>
+            ) : null}
+            <Button disabled={loading}>
+              {loading ? "Entrando..." : "Entrar"}
+            </Button>
+          </form>
+        ) : (
+          <form className="mt-6 grid gap-4" onSubmit={handleRegister}>
+            <label className="grid gap-2 text-sm font-medium">
+              Nome do estudio
+              <Input
+                value={studioName}
+                onChange={(event) => setStudioName(event.target.value)}
+                required
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              E-mail do estudio
+              <Input
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+                type="email"
+                autoComplete="email"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              Senha
+              <span className="relative">
+                <Input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  minLength={8}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  className="pr-11"
+                />
+                <button
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted"
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </span>
+            </label>
+            <div className="grid gap-4 md:grid-cols-[1fr_120px]">
+              <label className="grid gap-2 text-sm font-medium">
+                Nome do admin
+                <Input
+                  value={adminName}
+                  onChange={(event) => setAdminName(event.target.value)}
+                  required
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium">
+                PIN admin
+                <Input
+                  value={adminPin}
+                  onChange={(event) =>
+                    setAdminPin(
+                      event.target.value.replace(/\D/g, "").slice(0, 4),
+                    )
+                  }
+                  inputMode="numeric"
+                  pattern="\d{4}"
+                  required
+                />
+              </label>
+            </div>
+            <div className="grid gap-4 md:grid-cols-[1fr_120px]">
+              <label className="grid gap-2 text-sm font-medium">
+                Profissional
+                <Input
+                  value={professionalName}
+                  onChange={(event) => setProfessionalName(event.target.value)}
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium">
+                PIN
+                <Input
+                  value={professionalPin}
+                  onChange={(event) =>
+                    setProfessionalPin(
+                      event.target.value.replace(/\D/g, "").slice(0, 4),
+                    )
+                  }
+                  inputMode="numeric"
+                  pattern="\d{4}"
+                />
+              </label>
+            </div>
+            <div className="grid gap-4 md:grid-cols-[1fr_120px]">
+              <label className="grid gap-2 text-sm font-medium">
+                Recepcao
+                <Input
+                  value={receptionName}
+                  onChange={(event) => setReceptionName(event.target.value)}
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium">
+                PIN
+                <Input
+                  value={receptionPin}
+                  onChange={(event) =>
+                    setReceptionPin(
+                      event.target.value.replace(/\D/g, "").slice(0, 4),
+                    )
+                  }
+                  inputMode="numeric"
+                  pattern="\d{4}"
+                />
+              </label>
+            </div>
+            {error ? (
+              <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">
+                {error}
+              </p>
+            ) : null}
+            <Button disabled={loading}>
+              {loading ? "Criando..." : "Criar conta"}
+            </Button>
+          </form>
+        )}
       </section>
     </main>
   );

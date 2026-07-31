@@ -77,7 +77,7 @@ CORS_ORIGINS=https://sua-url-do-front.onrender.com
 - PWA com manifest, icone e service worker que nao faz cache de dados sensiveis.
 - Cliente de API centralizado com cookies, bearer token em memoria, refresh e tratamento 401/403.
 - Tipos gerados do OpenAPI em `apps/web/src/lib/openapi.ts`.
-- Fluxo `/login` e `/unlock`.
+- Fluxo `/login` com entrada e criacao de conta, seguido de `/unlock`.
 - Guard de rotas protegidas, `PermissionGate` e navegacao responsiva.
 - Dashboard, agenda, aula, alunos, experimentais, reposicoes, financeiro, planos, equipe, configuracoes, avaliacoes e auditoria usando endpoints reais existentes.
 
