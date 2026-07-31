@@ -79,6 +79,8 @@ CORS_ORIGINS=https://sua-url-do-front.onrender.com
 - Tipos gerados do OpenAPI em `apps/web/src/lib/openapi.ts`.
 - Fluxo `/login` com entrada e criacao de conta, seguido de `/unlock`.
 - Guard de rotas protegidas, `PermissionGate` e navegacao responsiva.
+- Home operacional com aulas do dia, alunos, saldo mensal, presenca, falta e aba de cancelados.
+- Agenda com criacao de horarios de aula e inclusao de alunos salvos.
 - Dashboard, agenda, aula, alunos, experimentais, reposicoes, financeiro, planos, equipe, configuracoes, avaliacoes e auditoria usando endpoints reais existentes.
 
 ## Lacunas conhecidas
