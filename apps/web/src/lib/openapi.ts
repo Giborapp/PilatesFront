@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/studio/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_studioRegister"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/studio/login": {
         parameters: {
             query?: never;
@@ -420,6 +436,38 @@ export interface paths {
         patch: operations["TrialProcessesController_status"];
         trace?: never;
     };
+    "/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/mark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceController_mark"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/plans": {
         parameters: {
             query?: never;
@@ -564,6 +612,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/recurring-schedules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["RecurringSchedulesController_update"];
+        trace?: never;
+    };
+    "/recurring-schedules/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RecurringSchedulesController_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recurring-schedules/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RecurringSchedulesController_archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/recurring-schedules/{id}/enrollments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RecurringSchedulesController_enroll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/recurring-schedules/{id}/generate-sessions": {
         parameters: {
             query?: never;
@@ -603,7 +715,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["ClassSessionsController_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -670,38 +782,6 @@ export interface paths {
         get: operations["WaitingListController_list"];
         put?: never;
         post: operations["WaitingListController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["AttendanceController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/mark": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["AttendanceController_mark"];
         delete?: never;
         options?: never;
         head?: never;
@@ -868,10 +948,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/setup/demo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SetupController_createDemo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        StudioRegisterDto: {
+            /** @example Studio Bella Pilates */
+            studioName: string;
+            /** @example contato@bellapilates.com.br */
+            email: string;
+            /** @example Senha@123456 */
+            password: string;
+            /** @example Marina Admin */
+            adminName: string;
+            /** @example 9071 */
+            adminPin: string;
+        };
         StudioLoginDto: {
             /** @example demo@pilates.local */
             email: string;
@@ -891,19 +999,31 @@ export interface components {
         UpdateStudentDto: Record<string, never>;
         CreateTrialDto: Record<string, never>;
         UpdateTrialStatusDto: Record<string, never>;
+        AttendanceDto: Record<string, never>;
         CreatePlanDto: Record<string, never>;
         CreateStudentPlanDto: Record<string, never>;
         CreatePaymentDto: Record<string, never>;
         PaymentActionDto: Record<string, never>;
         CreateScheduleDto: Record<string, never>;
+        UpdateScheduleDto: Record<string, never>;
+        PauseScheduleDto: Record<string, never>;
+        CreateRecurringEnrollmentDto: Record<string, never>;
         GenerateSessionsDto: Record<string, never>;
         CreateClassSessionDto: Record<string, never>;
+        UpdateClassSessionDto: Record<string, never>;
         CreateBookingDto: Record<string, never>;
         WaitingListDto: Record<string, never>;
-        AttendanceDto: Record<string, never>;
         CreateTemplateDto: Record<string, never>;
         CreateAssessmentDto: Record<string, never>;
         FileCreateDto: Record<string, never>;
+        BootstrapDemoDto: {
+            /** @example Studio Demo Pilates */
+            studioName?: string;
+            /** @example demo@pilates.local */
+            studioEmail?: string;
+            /** @example Demo@123456 */
+            studioPassword?: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -940,6 +1060,27 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_studioRegister: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudioRegisterDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1518,6 +1659,44 @@ export interface operations {
             };
         };
     };
+    AttendanceController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendanceController_mark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PlansController_list: {
         parameters: {
             query?: never;
@@ -1767,6 +1946,86 @@ export interface operations {
             };
         };
     };
+    RecurringSchedulesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateScheduleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RecurringSchedulesController_pause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PauseScheduleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RecurringSchedulesController_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RecurringSchedulesController_enroll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecurringEnrollmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     RecurringSchedulesController_generate: {
         parameters: {
             query?: never;
@@ -1826,7 +2085,7 @@ export interface operations {
             };
         };
     };
-    ClassSessionsController_update: {
+    ClassSessionsController_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1834,6 +2093,27 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassSessionsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateClassSessionDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -1942,44 +2222,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["WaitingListDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AttendanceController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AttendanceController_mark: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AttendanceDto"];
             };
         };
         responses: {
@@ -2221,6 +2463,29 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SetupController_createDemo: {
+        parameters: {
+            query?: never;
+            header: {
+                "x-setup-token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BootstrapDemoDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

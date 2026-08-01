@@ -24,8 +24,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { setDeviceOnly } = useAuth();
   const [mode, setMode] = useState<Mode>("login");
-  const [email, setEmail] = useState("demo@pilates.local");
-  const [password, setPassword] = useState("Demo@123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [studioName, setStudioName] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminPin, setAdminPin] = useState("");
@@ -309,3 +309,4 @@ export default function LoginPage() {
     </main>
   );
 }
+

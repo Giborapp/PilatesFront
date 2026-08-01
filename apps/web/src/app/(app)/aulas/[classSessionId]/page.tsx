@@ -13,15 +13,15 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/ui/state';
 export default function ClassSessionPage() {
   const params = useParams<{ classSessionId: string }>();
   const query = useQuery({
-    queryKey: ['class-sessions'],
+    queryKey: ['class-sessions', params.classSessionId],
     queryFn: async () => {
-      const result = await apiRequest<unknown>('/class-sessions');
+      const result = await apiRequest<unknown>(`/class-sessions/${params.classSessionId}`);
       if (!result.ok) throw new Error(result.error.message);
-      return asArray(result.data);
+      return isRecord(result.data) ? result.data : null;
     },
   });
 
-  const session = query.data?.find((record) => readString(record, 'id') === params.classSessionId);
+  const session = query.data;
   const bookings = asArray(session?.bookings);
 
   if (query.isLoading) return <LoadingState />;
@@ -30,7 +30,7 @@ export default function ClassSessionPage() {
     return (
       <EmptyState
         title="Aula nao encontrada"
-        description="O backend ainda nao possui endpoint de detalhe da aula; esta tela busca na lista de aulas."
+        description="Verifique se a aula ainda existe ou se voce tem permissao para acessa-la."
       />
     );
   }
@@ -83,3 +83,4 @@ function BookingCard({ booking }: { booking: UnknownRecord }) {
     </Card>
   );
 }
+

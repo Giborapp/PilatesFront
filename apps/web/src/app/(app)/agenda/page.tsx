@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,24 +10,41 @@ import {
   readString,
   UnknownRecord,
 } from "@/lib/api";
-import { formatDateTime } from "@/lib/format";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/state";
-import { StatusBadge } from "@/components/domain/badges";
+
+const weekdays = [
+  ["MONDAY", "Segunda"],
+  ["TUESDAY", "Terca"],
+  ["WEDNESDAY", "Quarta"],
+  ["THURSDAY", "Quinta"],
+  ["FRIDAY", "Sexta"],
+  ["SATURDAY", "Sabado"],
+  ["SUNDAY", "Domingo"],
+] as const;
+
+type AddMode = "once" | "always";
 
 export default function AgendaPage() {
   const queryClient = useQueryClient();
   const [unitId, setUnitId] = useState("");
   const [roomId, setRoomId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
-  const [startsAt, setStartsAt] = useState("");
+  const [weekday, setWeekday] = useState("MONDAY");
+  const [startTime, setStartTime] = useState("08:00");
   const [durationMinutes, setDurationMinutes] = useState(50);
   const [capacity, setCapacity] = useState(6);
+  const [scheduleId, setScheduleId] = useState("");
   const [classSessionId, setClassSessionId] = useState("");
   const [studentId, setStudentId] = useState("");
+  const [addMode, setAddMode] = useState<AddMode>("always");
 
+  const schedulesQuery = useRecords(
+    "/recurring-schedules",
+    "recurring-schedules",
+  );
   const classesQuery = useRecords("/class-sessions", "class-sessions");
   const unitsQuery = useRecords("/units", "units");
   const roomsQuery = useRecords("/rooms", "rooms");
@@ -49,31 +65,29 @@ export default function AgendaPage() {
   const professionals = staffQuery.data.filter((record) =>
     ["ADMIN", "PROFESSIONAL"].includes(readString(record, "role")),
   );
-  const activeRooms = roomId
-    ? roomsQuery.data
-    : roomsQuery.data.filter(
-        (record) => !unitId || readString(record, "unitId") === unitId,
-      );
+  const activeRooms = roomsQuery.data.filter(
+    (record) => !unitId || readString(record, "unitId") === unitId,
+  );
 
-  const createClass = useMutation({
+  const createSchedule = useMutation({
     mutationFn: async () => {
-      const start = new Date(startsAt);
-      const end = new Date(start.getTime() + durationMinutes * 60_000);
-      const result = await apiRequest("/class-sessions", {
+      const result = await apiRequest("/recurring-schedules", {
         method: "POST",
         body: JSON.stringify({
           unitId,
           roomId,
           professionalId,
-          startsAt: start.toISOString(),
-          endsAt: end.toISOString(),
+          weekday,
+          startTime,
+          durationMinutes,
           capacity,
+          startsOn: new Date().toISOString(),
         }),
       });
       if (!result.ok) throw new Error(result.error.message);
     },
     onSuccess: () => {
-      setStartsAt("");
+      void queryClient.invalidateQueries({ queryKey: ["recurring-schedules"] });
       void queryClient.invalidateQueries({ queryKey: ["class-sessions"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
@@ -81,29 +95,34 @@ export default function AgendaPage() {
 
   const addStudent = useMutation({
     mutationFn: async () => {
-      const result = await apiRequest("/bookings", {
+      const endpoint =
+        addMode === "always"
+          ? `/recurring-schedules/${scheduleId}/enrollments`
+          : "/bookings";
+      const body =
+        addMode === "always"
+          ? { studentId }
+          : { classSessionId, studentId, bookingType: "FIXED" };
+      const result = await apiRequest(endpoint, {
         method: "POST",
-        body: JSON.stringify({
-          classSessionId,
-          studentId,
-          bookingType: "FIXED",
-        }),
+        body: JSON.stringify(body),
       });
       if (!result.ok) throw new Error(result.error.message);
     },
     onSuccess: () => {
       setStudentId("");
+      void queryClient.invalidateQueries({ queryKey: ["recurring-schedules"] });
       void queryClient.invalidateQueries({ queryKey: ["class-sessions"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
-  function submitClass(event: FormEvent<HTMLFormElement>): void {
+  function submitSchedule(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    createClass.mutate();
+    createSchedule.mutate();
   }
 
-  function submitBooking(event: FormEvent<HTMLFormElement>): void {
+  function submitAddStudent(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     addStudent.mutate();
   }
@@ -119,8 +138,8 @@ export default function AgendaPage() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <CardTitle>Criar horario de aula</CardTitle>
-          <form className="mt-4 grid gap-4" onSubmit={submitClass}>
+          <CardTitle>Criar horario semanal</CardTitle>
+          <form className="mt-4 grid gap-4" onSubmit={submitSchedule}>
             <div className="grid gap-4 md:grid-cols-2">
               <Select
                 label="Unidade"
@@ -141,14 +160,28 @@ export default function AgendaPage() {
               onChange={setProfessionalId}
               records={professionals}
             />
-            <div className="grid gap-4 md:grid-cols-3">
-              <label className="grid gap-2 text-sm font-medium md:col-span-1">
-                Inicio
+            <div className="grid gap-4 md:grid-cols-4">
+              <label className="grid gap-2 text-sm font-medium">
+                Dia da semana
+                <select
+                  className={selectClassName}
+                  onChange={(event) => setWeekday(event.target.value)}
+                  value={weekday}
+                >
+                  {weekdays.map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-medium">
+                Horario
                 <Input
-                  value={startsAt}
-                  onChange={(event) => setStartsAt(event.target.value)}
+                  value={startTime}
+                  onChange={(event) => setStartTime(event.target.value)}
                   required
-                  type="datetime-local"
+                  type="time"
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium">
@@ -174,35 +207,64 @@ export default function AgendaPage() {
                 />
               </label>
             </div>
-            {createClass.isError ? (
+            {createSchedule.isError ? (
               <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">
-                {createClass.error.message}
+                {createSchedule.error.message}
               </p>
             ) : null}
             <Button
               disabled={
-                createClass.isPending ||
+                createSchedule.isPending ||
                 !unitId ||
                 !roomId ||
-                !professionalId ||
-                !startsAt
+                !professionalId
               }
             >
-              {createClass.isPending ? "Criando..." : "Criar aula"}
+              {createSchedule.isPending ? "Criando..." : "Criar horario"}
             </Button>
           </form>
         </Card>
 
         <Card>
-          <CardTitle>Adicionar aluno em aula</CardTitle>
-          <form className="mt-4 grid gap-4" onSubmit={submitBooking}>
-            <Select
-              label="Aula"
-              value={classSessionId}
-              onChange={setClassSessionId}
-              records={classesQuery.data}
-              labelFor={classLabel}
-            />
+          <CardTitle>Adicionar aluno</CardTitle>
+          <form className="mt-4 grid gap-4" onSubmit={submitAddStudent}>
+            <div className="grid grid-cols-2 rounded-md border border-border bg-background p-1">
+              <button
+                className={
+                  addMode === "always" ? activeTabClass : inactiveTabClass
+                }
+                onClick={() => setAddMode("always")}
+                type="button"
+              >
+                Sempre
+              </button>
+              <button
+                className={
+                  addMode === "once" ? activeTabClass : inactiveTabClass
+                }
+                onClick={() => setAddMode("once")}
+                type="button"
+              >
+                Uma vez
+              </button>
+            </div>
+            {addMode === "always" ? (
+              <Select
+                label="Horario semanal"
+                value={scheduleId}
+                onChange={setScheduleId}
+                records={schedulesQuery.data}
+                labelFor={scheduleLabel}
+              />
+            ) : (
+              <Select
+                label="Aula especifica"
+                value={classSessionId}
+                onChange={setClassSessionId}
+                records={classesQuery.data}
+                labelFor={classLabel}
+              />
+            )}
             <Select
               label="Aluno salvo"
               value={studentId}
@@ -216,7 +278,11 @@ export default function AgendaPage() {
               </p>
             ) : null}
             <Button
-              disabled={addStudent.isPending || !classSessionId || !studentId}
+              disabled={
+                addStudent.isPending ||
+                !studentId ||
+                (addMode === "always" ? !scheduleId : !classSessionId)
+              }
             >
               {addStudent.isPending ? "Adicionando..." : "Adicionar aluno"}
             </Button>
@@ -224,23 +290,23 @@ export default function AgendaPage() {
         </Card>
       </div>
 
-      {classesQuery.isLoading ? <LoadingState /> : null}
-      {classesQuery.isError ? (
+      {schedulesQuery.isLoading ? <LoadingState /> : null}
+      {schedulesQuery.isError ? (
         <ErrorState
-          message={classesQuery.errorMessage}
-          onRetry={() => void classesQuery.refetch()}
+          message={schedulesQuery.errorMessage}
+          onRetry={() => void schedulesQuery.refetch()}
         />
       ) : null}
-      {classesQuery.data.length === 0 && !classesQuery.isLoading ? (
-        <EmptyState title="Sem aulas" description="Nenhum horario criado." />
+      {schedulesQuery.data.length === 0 && !schedulesQuery.isLoading ? (
+        <EmptyState
+          title="Sem horarios"
+          description="Nenhum horario semanal criado."
+        />
       ) : null}
 
       <div className="grid gap-3">
-        {classesQuery.data.map((classSession) => (
-          <ClassSessionCard
-            key={readString(classSession, "id")}
-            classSession={classSession}
-          />
+        {schedulesQuery.data.map((schedule) => (
+          <ScheduleCard key={readString(schedule, "id")} schedule={schedule} />
         ))}
       </div>
     </section>
@@ -265,6 +331,216 @@ function useRecords(endpoint: string, queryKey: string) {
   };
 }
 
+function ScheduleCard({ schedule }: { schedule: UnknownRecord }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [pauseWeeks, setPauseWeeks] = useState(1);
+  const [confirmAction, setConfirmAction] = useState<
+    "pause" | "archive" | null
+  >(null);
+  const [weekday, setWeekday] = useState(readString(schedule, "weekday"));
+  const [startTime, setStartTime] = useState(readString(schedule, "startTime"));
+  const [capacity, setCapacity] = useState(readNumber(schedule, "capacity"));
+  const [durationMinutes, setDurationMinutes] = useState(
+    readNumber(schedule, "durationMinutes"),
+  );
+  const enrollments = asArray(schedule.enrollments);
+  const scheduleId = readString(schedule, "id");
+
+  const mutation = useMutation({
+    mutationFn: async (action: "update" | "pause" | "archive") => {
+      const endpoint =
+        action === "update"
+          ? `/recurring-schedules/${scheduleId}`
+          : `/recurring-schedules/${scheduleId}/${action}`;
+      const method = action === "update" ? "PATCH" : "POST";
+      const body =
+        action === "update"
+          ? { weekday, startTime, capacity, durationMinutes }
+          : action === "pause"
+            ? { weeks: pauseWeeks }
+            : {};
+      const result = await apiRequest(endpoint, {
+        method,
+        body: JSON.stringify(body),
+      });
+      if (!result.ok) throw new Error(result.error.message);
+    },
+    onSuccess: () => {
+      setEditing(false);
+      setConfirmAction(null);
+      void queryClient.invalidateQueries({ queryKey: ["recurring-schedules"] });
+      void queryClient.invalidateQueries({ queryKey: ["class-sessions"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+
+  return (
+    <Card className="grid gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <CardTitle>{scheduleLabel(schedule)}</CardTitle>
+          <p className="mt-1 text-sm text-muted">
+            {readString(asRecord(schedule.professional), "name")} -{" "}
+            {readNumber(schedule, "capacity")} vagas
+          </p>
+          {readString(schedule, "pauseUntil") ? (
+            <p className="mt-1 text-sm text-warning">
+              Pausado ate{" "}
+              {new Date(readString(schedule, "pauseUntil")).toLocaleDateString(
+                "pt-BR",
+              )}
+            </p>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            className="bg-white text-foreground ring-1 ring-border hover:bg-background"
+            onClick={() => setEditing((current) => !current)}
+          >
+            Modificar
+          </Button>
+          <Button
+            className="bg-white text-foreground ring-1 ring-border hover:bg-background"
+            onClick={() => setConfirmAction("pause")}
+          >
+            Pausar
+          </Button>
+          <Button
+            className="bg-white text-danger ring-1 ring-border hover:bg-background"
+            onClick={() => setConfirmAction("archive")}
+          >
+            Excluir
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {enrollments.length === 0 ? (
+          <span className="text-sm text-muted">Sem alunos fixos.</span>
+        ) : null}
+        {enrollments.map((enrollment, index) => {
+          const student = asRecord(enrollment.student);
+          return (
+            <span
+              className="rounded-full bg-background px-3 py-1 text-sm"
+              key={readString(enrollment, "id", String(index))}
+            >
+              {studentLabel(student)}
+            </span>
+          );
+        })}
+      </div>
+
+      {editing ? (
+        <div className="grid gap-3 rounded-md border border-border bg-background p-3 md:grid-cols-4">
+          <label className="grid gap-2 text-sm font-medium">
+            Dia
+            <select
+              className={selectClassName}
+              onChange={(event) => setWeekday(event.target.value)}
+              value={weekday}
+            >
+              {weekdays.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Horario
+            <Input
+              onChange={(event) => setStartTime(event.target.value)}
+              type="time"
+              value={startTime}
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Duracao
+            <Input
+              min={15}
+              onChange={(event) =>
+                setDurationMinutes(Number(event.target.value))
+              }
+              type="number"
+              value={durationMinutes}
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Vagas
+            <Input
+              min={1}
+              onChange={(event) => setCapacity(Number(event.target.value))}
+              type="number"
+              value={capacity}
+            />
+          </label>
+          <div className="flex gap-2 md:col-span-4">
+            <Button
+              disabled={mutation.isPending}
+              onClick={() => mutation.mutate("update")}
+            >
+              {mutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+            <Button
+              className="bg-white text-foreground ring-1 ring-border hover:bg-background"
+              onClick={() => setEditing(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmAction ? (
+        <div className="rounded-md border border-border bg-background p-3">
+          <p className="text-sm font-semibold">
+            {confirmAction === "pause"
+              ? "Confirmar pausa"
+              : "Confirmar exclusao"}
+          </p>
+          {confirmAction === "pause" ? (
+            <label className="mt-3 grid max-w-xs gap-2 text-sm font-medium">
+              Semanas pausado
+              <Input
+                min={1}
+                onChange={(event) => setPauseWeeks(Number(event.target.value))}
+                type="number"
+                value={pauseWeeks}
+              />
+            </label>
+          ) : null}
+          {mutation.isError ? (
+            <p className="mt-2 text-sm text-danger">{mutation.error.message}</p>
+          ) : null}
+          <div className="mt-3 flex gap-2">
+            <Button
+              disabled={mutation.isPending}
+              onClick={() => mutation.mutate(confirmAction)}
+            >
+              {mutation.isPending ? "Salvando..." : "Confirmar"}
+            </Button>
+            <Button
+              className="bg-white text-foreground ring-1 ring-border hover:bg-background"
+              disabled={mutation.isPending}
+              onClick={() => setConfirmAction(null)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </Card>
+  );
+}
+
+const selectClassName =
+  "min-h-11 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+const activeTabClass =
+  "rounded bg-panel px-3 py-2 text-sm font-semibold shadow-sm";
+const inactiveTabClass = "px-3 py-2 text-sm font-semibold text-muted";
+
 function Select({
   label,
   value,
@@ -282,7 +558,7 @@ function Select({
     <label className="grid gap-2 text-sm font-medium">
       {label}
       <select
-        className="min-h-11 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className={selectClassName}
         onChange={(event) => onChange(event.target.value)}
         required
         value={value}
@@ -298,47 +574,6 @@ function Select({
         ))}
       </select>
     </label>
-  );
-}
-
-function ClassSessionCard({ classSession }: { classSession: UnknownRecord }) {
-  const bookings = asArray(classSession.bookings);
-  return (
-    <Card className="grid gap-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <CardTitle>{formatDateTime(classSession.startsAt)}</CardTitle>
-          <p className="mt-1 text-sm text-muted">
-            {bookings.length}/{readNumber(classSession, "capacity")} alunos
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <StatusBadge value={classSession.status} />
-          <Link
-            className="text-sm font-semibold text-primary"
-            href={`/aulas/${readString(classSession, "id")}`}
-          >
-            Abrir aula
-          </Link>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {bookings.length === 0 ? (
-          <span className="text-sm text-muted">Sem alunos.</span>
-        ) : null}
-        {bookings.map((booking, index) => {
-          const student = isRecord(booking.student) ? booking.student : {};
-          return (
-            <span
-              key={readString(booking, "id", String(index))}
-              className="rounded-full bg-background px-3 py-1 text-sm"
-            >
-              {studentLabel(student)}
-            </span>
-          );
-        })}
-      </div>
-    </Card>
   );
 }
 
@@ -360,6 +595,17 @@ function studentLabel(record: UnknownRecord): string {
   return limit > 0 ? `${name} (${remaining}/${limit})` : name;
 }
 
+function scheduleLabel(record: UnknownRecord): string {
+  const day =
+    weekdays.find(([value]) => value === readString(record, "weekday"))?.[1] ??
+    readString(record, "weekday");
+  return `${day}, ${readString(record, "startTime")}`;
+}
+
 function classLabel(record: UnknownRecord): string {
-  return `${formatDateTime(record.startsAt)} - ${readNumber(record, "capacity")} vagas`;
+  return `${new Date(readString(record, "startsAt")).toLocaleString("pt-BR")} - ${readNumber(record, "capacity")} vagas`;
+}
+
+function asRecord(value: unknown): UnknownRecord {
+  return isRecord(value) ? value : {};
 }
