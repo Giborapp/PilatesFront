@@ -1,91 +1,175 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
-import { apiRequest } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { apiRequest } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardTitle } from "@/components/ui/card";
 
-const defaultFields = JSON.stringify(
-  [
-    {
-      id: 'main_complaint',
-      label: 'Queixa principal',
-      type: 'long_text',
-      required: true,
-      order: 1,
-    },
-    {
-      id: 'pain_level',
-      label: 'Nivel de dor',
-      type: 'pain_scale',
-      minimum: 0,
-      maximum: 10,
-      order: 2,
-    },
-  ],
-  null,
-  2,
-);
+type FieldType = "short_text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "pain_scale";
+
+type FieldDraft = {
+  id: string;
+  label: string;
+  type: FieldType;
+  required: boolean;
+  optionsText: string;
+  minimum?: number;
+  maximum?: number;
+};
+
+const fieldTypes: Array<[FieldType, string]> = [
+  ["short_text", "Texto curto"],
+  ["long_text", "Texto longo"],
+  ["number", "Numero"],
+  ["date", "Data"],
+  ["boolean", "Sim/Nao"],
+  ["single_select", "Escolha unica"],
+  ["multi_select", "Multipla escolha"],
+  ["pain_scale", "Escala de dor"],
+];
+
+function newField(): FieldDraft {
+  const id = `campo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  return { id, label: "", type: "short_text", required: false, optionsText: "", minimum: 0, maximum: 10 };
+}
 
 export default function NewAssessmentTemplatePage() {
   const router = useRouter();
-  const [name, setName] = useState('Anamnese inicial');
-  const [description, setDescription] = useState('');
-  const [fields, setFields] = useState(defaultFields);
-  const [error, setError] = useState('');
+  const [name, setName] = useState("Anamnese inicial");
+  const [description, setDescription] = useState("");
+  const [fields, setFields] = useState<FieldDraft[]>([
+    { ...newField(), id: "queixa_principal", label: "Queixa principal", type: "long_text", required: true },
+    { ...newField(), id: "nivel_dor", label: "Nivel de dor", type: "pain_scale", required: false, minimum: 0, maximum: 10 },
+  ]);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function updateField(index: number, patch: Partial<FieldDraft>): void {
+    setFields((current) => current.map((field, fieldIndex) => (fieldIndex === index ? { ...field, ...patch } : field)));
+  }
+
+  function removeField(index: number): void {
+    setFields((current) => current.filter((_, fieldIndex) => fieldIndex !== index));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
-    let parsedFields: unknown;
-    try {
-      parsedFields = JSON.parse(fields) as unknown;
-    } catch {
+    const normalizedFields = fields.map((field, index) => ({
+      id: field.id || `campo_${index + 1}`,
+      label: field.label.trim(),
+      type: field.type,
+      required: field.required,
+      options: ["single_select", "multi_select"].includes(field.type)
+        ? field.optionsText.split("\n").map((item) => item.trim()).filter(Boolean)
+        : undefined,
+      minimum: ["number", "pain_scale"].includes(field.type) ? field.minimum : undefined,
+      maximum: ["number", "pain_scale"].includes(field.type) ? field.maximum : undefined,
+    }));
+
+    if (normalizedFields.some((field) => !field.label)) {
       setLoading(false);
-      setError('A definicao de campos precisa ser JSON valido.');
+      setError("Todas as perguntas precisam ter texto.");
+      return;
+    }
+    if (normalizedFields.some((field) => ["single_select", "multi_select"].includes(field.type) && (!field.options || field.options.length === 0))) {
+      setLoading(false);
+      setError("Perguntas de escolha precisam ter pelo menos uma opcao.");
       return;
     }
 
-    const result = await apiRequest('/assessment-templates', {
-      method: 'POST',
-      body: JSON.stringify({ name, description: description || undefined, fields: parsedFields }),
+    const result = await apiRequest("/assessment-templates", {
+      method: "POST",
+      body: JSON.stringify({ name, description: description || undefined, fields: normalizedFields }),
     });
     setLoading(false);
     if (!result.ok) {
       setError(result.error.message);
       return;
     }
-    router.replace('/avaliacoes/modelos');
+    router.replace("/avaliacoes/modelos");
   }
 
   return (
-    <section className="max-w-3xl">
-      <h1 className="text-2xl font-semibold">Novo modelo de avaliacao</h1>
-      <form className="mt-5 grid gap-4 rounded-lg border border-border bg-panel p-4" onSubmit={handleSubmit}>
-        <label className="grid gap-2 text-sm font-medium">
-          Nome
-          <Input value={name} onChange={(event) => setName(event.target.value)} required />
-        </label>
-        <label className="grid gap-2 text-sm font-medium">
-          Descricao
-          <Input value={description} onChange={(event) => setDescription(event.target.value)} />
-        </label>
-        <label className="grid gap-2 text-sm font-medium">
-          Campos estruturados
-          <textarea
-            className="min-h-80 rounded-md border border-border p-3 font-mono text-sm"
-            value={fields}
-            onChange={(event) => setFields(event.target.value)}
-          />
-        </label>
-        <p className="text-sm text-muted">Construtor visual completo ainda depende de enriquecer os contratos de campos no backend/OpenAPI.</p>
+    <section className="grid max-w-4xl gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold">Novo formulario</h1>
+        <p className="text-sm text-muted">Crie avaliacoes e anamneses para aplicar nos alunos.</p>
+      </div>
+      <form className="grid gap-4" onSubmit={handleSubmit}>
+        <Card className="grid gap-4">
+          <label className="grid gap-2 text-sm font-medium">
+            Nome
+            <Input value={name} onChange={(event) => setName(event.target.value)} required />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Descricao
+            <Input value={description} onChange={(event) => setDescription(event.target.value)} />
+          </label>
+        </Card>
+
+        <div className="grid gap-3">
+          {fields.map((field, index) => (
+            <Card key={field.id} className="grid gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle>Pergunta {index + 1}</CardTitle>
+                <Button className="bg-white text-danger ring-1 ring-border hover:bg-background" type="button" onClick={() => removeField(index)} disabled={fields.length === 1}>
+                  Remover
+                </Button>
+              </div>
+              <label className="grid gap-2 text-sm font-medium">
+                Texto da pergunta
+                <Input value={field.label} onChange={(event) => updateField(index, { label: event.target.value })} required />
+              </label>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="grid gap-2 text-sm font-medium">
+                  Tipo
+                  <select className={selectClassName} value={field.type} onChange={(event) => updateField(index, { type: event.target.value as FieldType })}>
+                    {fieldTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  </select>
+                </label>
+                <label className="flex items-center gap-2 pt-7 text-sm font-medium">
+                  <input type="checkbox" checked={field.required} onChange={(event) => updateField(index, { required: event.target.checked })} />
+                  Obrigatoria
+                </label>
+              </div>
+              {["single_select", "multi_select"].includes(field.type) ? (
+                <label className="grid gap-2 text-sm font-medium">
+                  Opcoes, uma por linha
+                  <textarea className="min-h-28 rounded-md border border-border p-3 text-sm" value={field.optionsText} onChange={(event) => updateField(index, { optionsText: event.target.value })} />
+                </label>
+              ) : null}
+              {["number", "pain_scale"].includes(field.type) ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="grid gap-2 text-sm font-medium">
+                    Minimo
+                    <Input type="number" value={field.minimum ?? 0} onChange={(event) => updateField(index, { minimum: Number(event.target.value) })} />
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium">
+                    Maximo
+                    <Input type="number" value={field.maximum ?? 10} onChange={(event) => updateField(index, { maximum: Number(event.target.value) })} />
+                  </label>
+                </div>
+              ) : null}
+            </Card>
+          ))}
+        </div>
+
         {error ? <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">{error}</p> : null}
-        <Button disabled={loading}>{loading ? 'Salvando...' : 'Salvar modelo'}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" className="bg-white text-foreground ring-1 ring-border hover:bg-background" onClick={() => setFields((current) => [...current, newField()])}>
+            Adicionar pergunta
+          </Button>
+          <Button disabled={loading}>{loading ? "Salvando..." : "Salvar formulario"}</Button>
+        </div>
       </form>
     </section>
   );
 }
+
+const selectClassName =
+  "min-h-11 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";

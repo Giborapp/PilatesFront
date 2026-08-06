@@ -25,8 +25,6 @@ const weekdays = [
   ["SUNDAY", "Domingo"],
 ] as const;
 
-type AddMode = "once" | "always";
-
 export default function AgendaPage() {
   const queryClient = useQueryClient();
   const [professionalId, setProfessionalId] = useState("");
@@ -34,16 +32,11 @@ export default function AgendaPage() {
   const [startTime, setStartTime] = useState("08:00");
   const [durationMinutes, setDurationMinutes] = useState(50);
   const [capacity, setCapacity] = useState(6);
-  const [scheduleId, setScheduleId] = useState("");
-  const [classSessionId, setClassSessionId] = useState("");
-  const [studentId, setStudentId] = useState("");
-  const [addMode, setAddMode] = useState<AddMode>("always");
 
   const schedulesQuery = useRecords(
     "/recurring-schedules",
     "recurring-schedules",
   );
-  const classesQuery = useRecords("/class-sessions", "class-sessions");
   const staffQuery = useRecords("/staff", "staff");
   const studentsQuery = useQuery({
     queryKey: ["students"],
@@ -84,38 +77,9 @@ export default function AgendaPage() {
     },
   });
 
-  const addStudent = useMutation({
-    mutationFn: async () => {
-      const endpoint =
-        addMode === "always"
-          ? `/recurring-schedules/${scheduleId}/enrollments`
-          : "/bookings";
-      const body =
-        addMode === "always"
-          ? { studentId }
-          : { classSessionId, studentId, bookingType: "FIXED" };
-      const result = await apiRequest(endpoint, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-      if (!result.ok) throw new Error(result.error.message);
-    },
-    onSuccess: () => {
-      setStudentId("");
-      void queryClient.invalidateQueries({ queryKey: ["recurring-schedules"] });
-      void queryClient.invalidateQueries({ queryKey: ["class-sessions"] });
-      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    },
-  });
-
   function submitSchedule(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     createSchedule.mutate();
-  }
-
-  function submitAddStudent(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    addStudent.mutate();
   }
 
   return (
@@ -197,70 +161,6 @@ export default function AgendaPage() {
             </Button>
           </form>
         </Card>
-
-        <Card>
-          <CardTitle>Adicionar aluno</CardTitle>
-          <form className="mt-4 grid gap-4" onSubmit={submitAddStudent}>
-            <div className="grid grid-cols-2 rounded-md border border-border bg-background p-1">
-              <button
-                className={
-                  addMode === "always" ? activeTabClass : inactiveTabClass
-                }
-                onClick={() => setAddMode("always")}
-                type="button"
-              >
-                Sempre
-              </button>
-              <button
-                className={
-                  addMode === "once" ? activeTabClass : inactiveTabClass
-                }
-                onClick={() => setAddMode("once")}
-                type="button"
-              >
-                Uma vez
-              </button>
-            </div>
-            {addMode === "always" ? (
-              <Select
-                label="Horario semanal"
-                value={scheduleId}
-                onChange={setScheduleId}
-                records={schedulesQuery.data}
-                labelFor={scheduleLabel}
-              />
-            ) : (
-              <Select
-                label="Aula especifica"
-                value={classSessionId}
-                onChange={setClassSessionId}
-                records={classesQuery.data}
-                labelFor={classLabel}
-              />
-            )}
-            <Select
-              label="Aluno salvo"
-              value={studentId}
-              onChange={setStudentId}
-              records={students}
-              labelFor={studentLabel}
-            />
-            {addStudent.isError ? (
-              <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">
-                {addStudent.error.message}
-              </p>
-            ) : null}
-            <Button
-              disabled={
-                addStudent.isPending ||
-                !studentId ||
-                (addMode === "always" ? !scheduleId : !classSessionId)
-              }
-            >
-              {addStudent.isPending ? "Adicionando..." : "Adicionar aluno"}
-            </Button>
-          </form>
-        </Card>
       </div>
 
       {schedulesQuery.isLoading ? <LoadingState /> : null}
@@ -279,7 +179,7 @@ export default function AgendaPage() {
 
       <div className="grid gap-3">
         {schedulesQuery.data.map((schedule) => (
-          <ScheduleCard key={readString(schedule, "id")} schedule={schedule} />
+          <ScheduleCard key={readString(schedule, "id")} schedule={schedule} students={students} />
         ))}
       </div>
     </section>
@@ -304,7 +204,7 @@ function useRecords(endpoint: string, queryKey: string) {
   };
 }
 
-function ScheduleCard({ schedule }: { schedule: UnknownRecord }) {
+function ScheduleCard({ schedule, students }: { schedule: UnknownRecord; students: UnknownRecord[] }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [pauseWeeks, setPauseWeeks] = useState(1);
@@ -319,6 +219,22 @@ function ScheduleCard({ schedule }: { schedule: UnknownRecord }) {
   );
   const enrollments = asArray(schedule.enrollments);
   const scheduleId = readString(schedule, "id");
+  const [studentId, setStudentId] = useState("");
+  const addStudent = useMutation({
+    mutationFn: async () => {
+      const result = await apiRequest(`/recurring-schedules/${scheduleId}/enrollments`, {
+        method: "POST",
+        body: JSON.stringify({ studentId }),
+      });
+      if (!result.ok) throw new Error(result.error.message);
+    },
+    onSuccess: () => {
+      setStudentId("");
+      void queryClient.invalidateQueries({ queryKey: ["recurring-schedules"] });
+      void queryClient.invalidateQueries({ queryKey: ["class-sessions"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
 
   const mutation = useMutation({
     mutationFn: async (action: "update" | "pause" | "archive") => {
@@ -405,6 +321,29 @@ function ScheduleCard({ schedule }: { schedule: UnknownRecord }) {
         })}
       </div>
 
+      <form
+        className="grid gap-2 rounded-md border border-border bg-background p-3 md:grid-cols-[1fr_auto]"
+        onSubmit={(event) => {
+          event.preventDefault();
+          addStudent.mutate();
+        }}
+      >
+        <Select
+          label="Adicionar aluno fixo"
+          value={studentId}
+          onChange={setStudentId}
+          records={students}
+          labelFor={studentLabel}
+        />
+        <div className="flex items-end">
+          <Button disabled={addStudent.isPending || !studentId}>
+            {addStudent.isPending ? "Adicionando..." : "Adicionar"}
+          </Button>
+        </div>
+        {addStudent.isError ? (
+          <p className="text-sm text-danger md:col-span-2">{addStudent.error.message}</p>
+        ) : null}
+      </form>
       {editing ? (
         <div className="grid gap-3 rounded-md border border-border bg-background p-3 md:grid-cols-4">
           <label className="grid gap-2 text-sm font-medium">
@@ -510,9 +449,6 @@ function ScheduleCard({ schedule }: { schedule: UnknownRecord }) {
 
 const selectClassName =
   "min-h-11 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
-const activeTabClass =
-  "rounded bg-panel px-3 py-2 text-sm font-semibold shadow-sm";
-const inactiveTabClass = "px-3 py-2 text-sm font-semibold text-muted";
 
 function Select({
   label,
@@ -575,13 +511,12 @@ function scheduleLabel(record: UnknownRecord): string {
   return `${day}, ${readString(record, "startTime")}`;
 }
 
-function classLabel(record: UnknownRecord): string {
-  return `${new Date(readString(record, "startsAt")).toLocaleString("pt-BR")} - ${readNumber(record, "capacity")} vagas`;
-}
 
 function asRecord(value: unknown): UnknownRecord {
   return isRecord(value) ? value : {};
 }
+
+
 
 
 

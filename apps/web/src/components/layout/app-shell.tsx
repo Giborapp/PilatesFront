@@ -35,7 +35,7 @@ const navItems: NavItem[] = [
   { href: '/reposicoes', label: 'Reposicoes', permission: 'attendance.read', icon: <ClipboardList size={18} /> },
   { href: '/financeiro', label: 'Financeiro', permission: 'payments.read', icon: <CreditCard size={18} /> },
   { href: '/equipe', label: 'Equipe', permission: 'staff.manage', icon: <ShieldCheck size={18} /> },
-  { href: '/configuracoes', label: 'Configuracoes', permission: 'studio_settings.manage', icon: <Settings size={18} /> },
+  { href: '/configuracoes', label: 'Gestao', permission: 'assessments.read', icon: <Settings size={18} /> },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -123,3 +123,4 @@ export function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
