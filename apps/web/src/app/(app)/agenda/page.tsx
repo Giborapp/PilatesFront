@@ -29,8 +29,6 @@ type AddMode = "once" | "always";
 
 export default function AgendaPage() {
   const queryClient = useQueryClient();
-  const [unitId, setUnitId] = useState("");
-  const [roomId, setRoomId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
   const [weekday, setWeekday] = useState("MONDAY");
   const [startTime, setStartTime] = useState("08:00");
@@ -46,8 +44,6 @@ export default function AgendaPage() {
     "recurring-schedules",
   );
   const classesQuery = useRecords("/class-sessions", "class-sessions");
-  const unitsQuery = useRecords("/units", "units");
-  const roomsQuery = useRecords("/rooms", "rooms");
   const staffQuery = useRecords("/staff", "staff");
   const studentsQuery = useQuery({
     queryKey: ["students"],
@@ -65,17 +61,12 @@ export default function AgendaPage() {
   const professionals = staffQuery.data.filter((record) =>
     ["ADMIN", "PROFESSIONAL"].includes(readString(record, "role")),
   );
-  const activeRooms = roomsQuery.data.filter(
-    (record) => !unitId || readString(record, "unitId") === unitId,
-  );
 
   const createSchedule = useMutation({
     mutationFn: async () => {
       const result = await apiRequest("/recurring-schedules", {
         method: "POST",
         body: JSON.stringify({
-          unitId,
-          roomId,
           professionalId,
           weekday,
           startTime,
@@ -140,20 +131,7 @@ export default function AgendaPage() {
         <Card>
           <CardTitle>Criar horario semanal</CardTitle>
           <form className="mt-4 grid gap-4" onSubmit={submitSchedule}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Select
-                label="Unidade"
-                value={unitId}
-                onChange={setUnitId}
-                records={unitsQuery.data}
-              />
-              <Select
-                label="Sala"
-                value={roomId}
-                onChange={setRoomId}
-                records={activeRooms}
-              />
-            </div>
+
             <Select
               label="Profissional"
               value={professionalId}
@@ -213,12 +191,7 @@ export default function AgendaPage() {
               </p>
             ) : null}
             <Button
-              disabled={
-                createSchedule.isPending ||
-                !unitId ||
-                !roomId ||
-                !professionalId
-              }
+              disabled={createSchedule.isPending || !professionalId}
             >
               {createSchedule.isPending ? "Criando..." : "Criar horario"}
             </Button>
@@ -609,3 +582,6 @@ function classLabel(record: UnknownRecord): string {
 function asRecord(value: unknown): UnknownRecord {
   return isRecord(value) ? value : {};
 }
+
+
+
