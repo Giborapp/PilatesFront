@@ -32,6 +32,7 @@ export default function AgendaPage() {
   const [startTime, setStartTime] = useState("08:00");
   const [durationMinutes, setDurationMinutes] = useState(50);
   const [capacity, setCapacity] = useState(6);
+  const [newScheduleStudentId, setNewScheduleStudentId] = useState("");
 
   const schedulesQuery = useRecords(
     "/recurring-schedules",
@@ -57,7 +58,7 @@ export default function AgendaPage() {
 
   const createSchedule = useMutation({
     mutationFn: async () => {
-      const result = await apiRequest("/recurring-schedules", {
+      const result = await apiRequest<UnknownRecord>("/recurring-schedules", {
         method: "POST",
         body: JSON.stringify({
           professionalId,
@@ -69,8 +70,19 @@ export default function AgendaPage() {
         }),
       });
       if (!result.ok) throw new Error(result.error.message);
+      const scheduleId = readString(result.data, "id");
+      if (newScheduleStudentId && scheduleId) {
+        const enrollmentResult = await apiRequest(`/recurring-schedules/${scheduleId}/enrollments`, {
+          method: "POST",
+          body: JSON.stringify({ studentId: newScheduleStudentId }),
+        });
+        if (!enrollmentResult.ok) {
+          throw new Error(enrollmentResult.error.message);
+        }
+      }
     },
     onSuccess: () => {
+      setNewScheduleStudentId("");
       void queryClient.invalidateQueries({ queryKey: ["recurring-schedules"] });
       void queryClient.invalidateQueries({ queryKey: ["class-sessions"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -95,13 +107,21 @@ export default function AgendaPage() {
         <Card>
           <CardTitle>Criar horario semanal</CardTitle>
           <form className="mt-4 grid gap-4" onSubmit={submitSchedule}>
-
-            <Select
-              label="Profissional"
-              value={professionalId}
-              onChange={setProfessionalId}
-              records={professionals}
-            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Select
+                label="Profissional"
+                value={professionalId}
+                onChange={setProfessionalId}
+                records={professionals}
+              />
+              <Select
+                label="Aluno"
+                value={newScheduleStudentId}
+                onChange={setNewScheduleStudentId}
+                records={students}
+                labelFor={studentLabel}
+              />
+            </div>
             <div className="grid gap-4 md:grid-cols-4">
               <label className="grid gap-2 text-sm font-medium">
                 Dia da semana
