@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest, asArray, readString, UnknownRecord } from '@/lib/api';
+import { apiRequest, asArray, isRecord, readString, UnknownRecord } from '@/lib/api';
 import { formatDateTime, formatMoney } from '@/lib/format';
 import { Card, CardTitle } from '@/components/ui/card';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/state';
@@ -61,7 +61,13 @@ export function RecordList({
 }
 
 function RecordCard({ record, fields }: { record: UnknownRecord; fields: Field[] }) {
-  const title = readString(record, 'fullName') || readString(record, 'name') || readString(record, 'action') || readString(record, 'id');
+  const student = isRecord(record.student) ? record.student : null;
+  const title =
+    readString(record, 'fullName') ||
+    readString(record, 'name') ||
+    (student ? readString(student, 'preferredName') || readString(student, 'fullName') : '') ||
+    readString(record, 'action') ||
+    readString(record, 'id');
   return (
     <Card className="grid gap-3">
       <CardTitle>{title || 'Registro'}</CardTitle>
@@ -78,14 +84,19 @@ function RecordCard({ record, fields }: { record: UnknownRecord; fields: Field[]
 }
 
 function renderValue(record: UnknownRecord, field: Field) {
-  const value = record[field.key];
+  const value = readValue(record, field.key);
   if (field.kind === 'date') return formatDateTime(value);
   if (field.kind === 'money') return formatMoney(value);
   if (field.kind === 'status') return <StatusBadge value={value} />;
-  if (field.kind === 'link' && field.hrefPrefix && typeof value === 'string') {
+  if (field.kind === 'link' && field.hrefPrefix) {
+    const id = readString(record, 'id');
+    const label = typeof value === 'string' && value.trim().length > 0 ? value : 'Abrir';
+    if (!id) {
+      return label;
+    }
     return (
-      <Link className="font-semibold text-primary" href={`${field.hrefPrefix}/${value}`}>
-        Abrir
+      <Link className="font-semibold text-primary" href={`${field.hrefPrefix}/${id}`}>
+        {label}
       </Link>
     );
   }
@@ -93,4 +104,13 @@ function renderValue(record: UnknownRecord, field: Field) {
     return String(value);
   }
   return '-';
+}
+
+function readValue(record: UnknownRecord, key: string): unknown {
+  return key.split('.').reduce<unknown>((current, part) => {
+    if (!isRecord(current)) {
+      return undefined;
+    }
+    return current[part];
+  }, record);
 }

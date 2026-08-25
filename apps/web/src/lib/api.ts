@@ -1,6 +1,8 @@
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'https://pilates-manager-api.onrender.com';
 
+const API_TIMEOUT_MS = 15_000;
+
 let accessToken: string | null = null;
 let onUnauthorized: (() => void) | null = null;
 
@@ -37,13 +39,16 @@ export async function apiRequest<T>(
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
+  const timeout = createTimeoutSignal(options.signal);
 
   try {
     const response = await fetch(`${API_URL}${path}`, {
       ...options,
       headers,
       credentials: 'include',
+      signal: timeout.signal,
     });
+    timeout.clear();
 
     if (response.status === 401 && retry) {
       const refreshed = await refreshSession();
@@ -67,6 +72,7 @@ export async function apiRequest<T>(
 
     return { ok: true, data: data as T };
   } catch {
+    timeout.clear();
     return {
       ok: false,
       error: { status: 0, message: 'Nao foi possivel conectar com o backend.' },
@@ -75,10 +81,13 @@ export async function apiRequest<T>(
 }
 
 export async function refreshSession(): Promise<boolean> {
+  const timeout = createTimeoutSignal();
   const response = await fetch(`${API_URL}/auth/session/refresh`, {
     method: 'POST',
     credentials: 'include',
+    signal: timeout.signal,
   }).catch(() => null);
+  timeout.clear();
 
   if (!response?.ok) {
     setAccessToken(null);
@@ -136,4 +145,19 @@ function getErrorMessage(data: unknown, status: number): string {
     return 'Sessao expirada ou invalida.';
   }
   return 'Erro ao processar a solicitacao.';
+}
+
+function createTimeoutSignal(signal?: AbortSignal | null): {
+  signal?: AbortSignal;
+  clear: () => void;
+} {
+  if (signal) {
+    return { signal, clear: () => undefined };
+  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  return {
+    signal: controller.signal,
+    clear: () => clearTimeout(timeoutId),
+  };
 }

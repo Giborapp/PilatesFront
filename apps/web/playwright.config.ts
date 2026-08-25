@@ -12,9 +12,9 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
-    command: 'pnpm dev',
+    command: 'pnpm --dir ../.. dev',
     url: 'http://127.0.0.1:2345',
     reuseExistingServer: true,
-    timeout: 120_000,
+    timeout: 240_000,
   },
 });

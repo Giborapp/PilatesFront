@@ -10,7 +10,7 @@ export default function AssessmentsPage() {
         endpoint="/assessments"
         queryKey="assessments"
         fields={[
-          { key: 'studentId', label: 'Aluno' },
+          { key: 'student.fullName', label: 'Aluno' },
           { key: 'templateVersion', label: 'Versao do modelo' },
           { key: 'status', label: 'Status', kind: 'status' },
           { key: 'completedAt', label: 'Concluida em', kind: 'date' },

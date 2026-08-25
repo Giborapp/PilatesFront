@@ -24,7 +24,8 @@ export default function StudentsPage() {
         endpoint="/students"
         queryKey="students"
         fields={[
-          { key: "id", label: "Perfil", kind: "link", hrefPrefix: "/alunos" },
+          { key: "fullName", label: "Perfil", kind: "link", hrefPrefix: "/alunos" },
+          { key: "preferredName", label: "Nome de uso" },
           { key: "phone", label: "Telefone" },
           { key: "email", label: "E-mail" },
           { key: "monthlyLessonLimit", label: "Aulas/mes" },

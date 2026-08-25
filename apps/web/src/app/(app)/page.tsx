@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   apiRequest,
@@ -12,7 +12,7 @@ import {
   UnknownRecord,
 } from "@/lib/api";
 import { useAuth } from "@/features/auth/auth-provider";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatMoney } from "@/lib/format";
 import { AttendanceButtons } from "@/components/domain/attendance-buttons";
 import { StatusBadge } from "@/components/domain/badges";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,10 @@ export default function DashboardPage() {
   });
 
   const classes = asArray(query.data?.classesToday);
+  const overduePayments = asArray(query.data?.overduePayments);
+  const duePayments = asArray(query.data?.duePayments);
+  const trialProcesses = asArray(query.data?.trialProcesses);
+  const expiringCredits = asArray(query.data?.expiringCredits);
   const cancelledBookings = useMemo(
     () =>
       classes.flatMap((classSession) =>
@@ -91,6 +95,15 @@ export default function DashboardPage() {
         />
       ) : null}
 
+      {!query.isLoading && !query.isError ? (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Aulas hoje" value={classes.length} />
+          <MetricCard label="Pagamentos vencidos" value={overduePayments.length} tone={overduePayments.length > 0 ? "danger" : "default"} />
+          <MetricCard label="Vencem em 7 dias" value={duePayments.length} />
+          <MetricCard label="Reposicoes vencendo" value={expiringCredits.length} tone={expiringCredits.length > 0 ? "warning" : "default"} />
+        </div>
+      ) : null}
+
       {viewMode === "today" ? (
         <div className="grid gap-4">
           {classes.length === 0 && !query.isLoading ? (
@@ -123,7 +136,102 @@ export default function DashboardPage() {
           ))}
         </div>
       )}
+
+      {!query.isLoading && !query.isError ? (
+        <div className="grid gap-4 xl:grid-cols-3">
+          <DashboardList title="Financeiro vencido" empty="Nenhuma cobranca vencida." records={overduePayments}>
+            {(payment) => <PaymentAlert payment={payment} />}
+          </DashboardList>
+          <DashboardList title="Vencimentos proximos" empty="Nenhuma cobranca vence nos proximos dias." records={duePayments}>
+            {(payment) => <PaymentAlert payment={payment} />}
+          </DashboardList>
+          <DashboardList title="Acompanhar hoje" empty="Sem experimentais ou reposicoes urgentes." records={[...trialProcesses, ...expiringCredits]}>
+            {(record) => isRecord(record.student) ? <StudentAlert record={record} /> : <GenericAlert record={record} />}
+          </DashboardList>
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: number;
+  tone?: "default" | "danger" | "warning";
+}) {
+  const toneClass =
+    tone === "danger"
+      ? "text-danger"
+      : tone === "warning"
+        ? "text-warning"
+        : "text-foreground";
+  return (
+    <Card>
+      <p className="text-xs font-semibold uppercase text-muted">{label}</p>
+      <p className={`mt-2 text-3xl font-semibold ${toneClass}`}>{value}</p>
+    </Card>
+  );
+}
+
+function DashboardList({
+  title,
+  empty,
+  records,
+  children,
+}: {
+  title: string;
+  empty: string;
+  records: UnknownRecord[];
+  children: (record: UnknownRecord) => ReactNode;
+}) {
+  return (
+    <Card className="grid content-start gap-3">
+      <CardTitle>{title}</CardTitle>
+      {records.length === 0 ? <p className="text-sm text-muted">{empty}</p> : null}
+      {records.slice(0, 5).map((record, index) => (
+        <div key={readString(record, "id", String(index))} className="rounded-md border border-border bg-background p-3">
+          {children(record)}
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+function PaymentAlert({ payment }: { payment: UnknownRecord }) {
+  const student = isRecord(payment.student) ? payment.student : {};
+  return (
+    <div className="grid gap-1">
+      <p className="font-semibold">{studentName(student)}</p>
+      <p className="text-sm text-muted">
+        {formatMoney(payment.amount)} - vence {formatDateTime(payment.dueDate, { dateStyle: "short", timeStyle: undefined })}
+      </p>
+      <StatusBadge value={payment.effectiveStatus ?? payment.status} />
+    </div>
+  );
+}
+
+function StudentAlert({ record }: { record: UnknownRecord }) {
+  const student = isRecord(record.student) ? record.student : {};
+  const date = readString(record, "expiresAt") || readString(record, "createdAt");
+  return (
+    <div className="grid gap-1">
+      <p className="font-semibold">{studentName(student)}</p>
+      <p className="text-sm text-muted">{date ? formatDateTime(date, { dateStyle: "short", timeStyle: undefined }) : "Sem data"}</p>
+      <StatusBadge value={record.status} />
+    </div>
+  );
+}
+
+function GenericAlert({ record }: { record: UnknownRecord }) {
+  return (
+    <div className="grid gap-1">
+      <p className="font-semibold">{readString(record, "source") || readString(record, "id", "Registro")}</p>
+      <StatusBadge value={record.status} />
+    </div>
   );
 }
 

@@ -86,7 +86,6 @@ CORS_ORIGINS=https://sua-url-do-front.onrender.com
 ## Lacunas conhecidas
 
 - O OpenAPI atual do backend nao descreve schemas de resposta em muitos endpoints.
-- O backend nao tem endpoint de bootstrap inicial seguro para criar o primeiro estudio/admin em producao.
-- O backend nao tem endpoint de detalhe para algumas entidades, como `GET /class-sessions/:id` e `GET /assessment-templates/:id`.
 - Upload binario de arquivos ainda nao esta completo no backend.
 - Relatorios dedicados ainda nao existem no backend.
+- Algumas telas administrativas ainda priorizam listagem e precisam evoluir para fluxos completos de acao.

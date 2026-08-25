@@ -8,6 +8,7 @@ export default function TrialsPage() {
       endpoint="/trial-processes"
       queryKey="trial-processes"
       fields={[
+        { key: 'student.fullName', label: 'Aluno' },
         { key: 'source', label: 'Origem' },
         { key: 'status', label: 'Status', kind: 'status' },
         { key: 'convertedAt', label: 'Convertido em', kind: 'date' },

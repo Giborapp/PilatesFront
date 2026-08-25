@@ -8,6 +8,7 @@ export default function ReplacementCreditsPage() {
       endpoint="/replacement-credits"
       queryKey="replacement-credits"
       fields={[
+        { key: 'student.fullName', label: 'Aluno' },
         { key: 'status', label: 'Status', kind: 'status' },
         { key: 'grantedAt', label: 'Gerado em', kind: 'date' },
         { key: 'expiresAt', label: 'Validade', kind: 'date' },

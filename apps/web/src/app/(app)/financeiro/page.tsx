@@ -10,6 +10,7 @@ export default function FinancePage() {
         endpoint="/payments"
         queryKey="payments"
         fields={[
+          { key: 'student.fullName', label: 'Aluno' },
           { key: 'referenceMonth', label: 'Referencia', kind: 'date' },
           { key: 'dueDate', label: 'Vencimento', kind: 'date' },
           { key: 'amount', label: 'Valor', kind: 'money' },
