@@ -32,7 +32,7 @@ export default function AgendaPage() {
   const [startTime, setStartTime] = useState("08:00");
   const [durationMinutes, setDurationMinutes] = useState(50);
   const [capacity, setCapacity] = useState(6);
-  const [newScheduleStudentId, setNewScheduleStudentId] = useState("");
+  const [newScheduleStudentIds, setNewScheduleStudentIds] = useState<string[]>([]);
 
   const schedulesQuery = useRecords(
     "/recurring-schedules",
@@ -60,29 +60,20 @@ export default function AgendaPage() {
     mutationFn: async () => {
       const result = await apiRequest<UnknownRecord>("/recurring-schedules", {
         method: "POST",
-        body: JSON.stringify({
-          professionalId,
+          body: JSON.stringify({
+            professionalId,
           weekday,
           startTime,
           durationMinutes,
           capacity,
-          startsOn: new Date().toISOString(),
-        }),
+            startsOn: new Date().toISOString(),
+            studentIds: newScheduleStudentIds,
+          }),
       });
       if (!result.ok) throw new Error(result.error.message);
-      const scheduleId = readString(result.data, "id");
-      if (newScheduleStudentId && scheduleId) {
-        const enrollmentResult = await apiRequest(`/recurring-schedules/${scheduleId}/enrollments`, {
-          method: "POST",
-          body: JSON.stringify({ studentId: newScheduleStudentId }),
-        });
-        if (!enrollmentResult.ok) {
-          throw new Error(enrollmentResult.error.message);
-        }
-      }
     },
     onSuccess: () => {
-      setNewScheduleStudentId("");
+      setNewScheduleStudentIds([]);
       void queryClient.invalidateQueries({ queryKey: ["recurring-schedules"] });
       void queryClient.invalidateQueries({ queryKey: ["class-sessions"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -114,10 +105,10 @@ export default function AgendaPage() {
                 onChange={setProfessionalId}
                 records={professionals}
               />
-              <Select
+              <MultiSelect
                 label="Aluno"
-                value={newScheduleStudentId}
-                onChange={setNewScheduleStudentId}
+                value={newScheduleStudentIds}
+                onChange={setNewScheduleStudentIds}
                 records={students}
                 labelFor={studentLabel}
               />
@@ -504,6 +495,10 @@ function Select({
       </select>
     </label>
   );
+}
+
+function MultiSelect({ label, value, onChange, records, labelFor = defaultLabel }: { label: string; value: string[]; onChange: (value: string[]) => void; records: UnknownRecord[]; labelFor?: (record: UnknownRecord) => string }) {
+  return <label className="grid gap-2 text-sm font-medium">{label}<select className={selectClassName} multiple value={value} onChange={(event) => onChange(Array.from(event.target.selectedOptions, (option) => option.value))}>{records.map((record) => <option key={readString(record, "id")} value={readString(record, "id")}>{labelFor(record)}</option>)}</select><span className="text-xs text-muted">{value.length} aluno(s) selecionado(s)</span></label>;
 }
 
 function defaultLabel(record: UnknownRecord): string {

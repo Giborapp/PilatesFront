@@ -13,6 +13,8 @@ export const PERMISSIONS = [
   'students.update_sensitive',
   'students.archive',
   'assessments.read',
+  'assessments.clinical_read',
+  'assessments.clinical_manage',
   'assessments.create',
   'assessments.update_draft',
   'assessment_templates.manage',

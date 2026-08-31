@@ -78,6 +78,8 @@ CORS_ORIGINS=https://sua-url-do-front.onrender.com
 - Cliente de API centralizado com cookies, bearer token em memoria, refresh e tratamento 401/403.
 - Tipos gerados do OpenAPI em `apps/web/src/lib/openapi.ts`.
 - Fluxo `/login` com entrada e criacao de conta, seguido de `/unlock`.
+- Cadastro inicial minimo e assistente `/onboarding` retomavel para dados do
+  estudio, operacao, planos iniciais, cor e logo privada.
 - Guard de rotas protegidas, `PermissionGate` e navegacao responsiva.
 - Home operacional com aulas do dia, alunos, saldo mensal, presenca, falta e aba de cancelados.
 - Agenda com criacao de horarios de aula e inclusao de alunos salvos.

@@ -29,10 +29,6 @@ export default function LoginPage() {
   const [studioName, setStudioName] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminPin, setAdminPin] = useState("");
-  const [professionalName, setProfessionalName] = useState("");
-  const [professionalPin, setProfessionalPin] = useState("");
-  const [receptionName, setReceptionName] = useState("");
-  const [receptionPin, setReceptionPin] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -79,10 +75,6 @@ export default function LoginPage() {
         password,
         adminName,
         adminPin,
-        professionalName: professionalName || undefined,
-        professionalPin: professionalPin || undefined,
-        receptionName: receptionName || undefined,
-        receptionPin: receptionPin || undefined,
         deviceName: "Web",
       }),
     });
@@ -113,7 +105,10 @@ export default function LoginPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-background p-6">
       <section className="w-full max-w-xl rounded-lg border border-border bg-panel p-6 shadow-sm">
-        <p className="text-sm font-bold uppercase text-primary">
+        <div className="mx-auto grid size-16 place-items-center rounded-lg bg-primary text-xl font-bold text-white">
+          PM
+        </div>
+        <p className="mt-4 text-center text-sm font-bold uppercase text-primary">
           Pilates Manager
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
@@ -248,50 +243,6 @@ export default function LoginPage() {
                   inputMode="numeric"
                   pattern="\d{4}"
                   required
-                />
-              </label>
-            </div>
-            <div className="grid gap-4 md:grid-cols-[1fr_120px]">
-              <label className="grid gap-2 text-sm font-medium">
-                Profissional
-                <Input
-                  value={professionalName}
-                  onChange={(event) => setProfessionalName(event.target.value)}
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium">
-                PIN
-                <Input
-                  value={professionalPin}
-                  onChange={(event) =>
-                    setProfessionalPin(
-                      event.target.value.replace(/\D/g, "").slice(0, 4),
-                    )
-                  }
-                  inputMode="numeric"
-                  pattern="\d{4}"
-                />
-              </label>
-            </div>
-            <div className="grid gap-4 md:grid-cols-[1fr_120px]">
-              <label className="grid gap-2 text-sm font-medium">
-                Recepcao
-                <Input
-                  value={receptionName}
-                  onChange={(event) => setReceptionName(event.target.value)}
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium">
-                PIN
-                <Input
-                  value={receptionPin}
-                  onChange={(event) =>
-                    setReceptionPin(
-                      event.target.value.replace(/\D/g, "").slice(0, 4),
-                    )
-                  }
-                  inputMode="numeric"
-                  pattern="\d{4}"
                 />
               </label>
             </div>

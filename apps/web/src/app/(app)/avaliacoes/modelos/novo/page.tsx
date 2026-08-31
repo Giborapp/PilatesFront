@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, ReactNode, useState } from "react";
+import { ArrowDown, ArrowUp, Copy, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardTitle } from "@/components/ui/card";
 
-type FieldType = "short_text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "pain_scale";
+type FieldType = "short_text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "numeric_scale" | "pain_scale" | "measure" | "section";
 
 type FieldDraft = {
   id: string;
@@ -15,6 +16,8 @@ type FieldDraft = {
   type: FieldType;
   required: boolean;
   optionsText: string;
+  description: string;
+  unit: string;
   minimum?: number;
   maximum?: number;
 };
@@ -27,18 +30,22 @@ const fieldTypes: Array<[FieldType, string]> = [
   ["boolean", "Sim/Nao"],
   ["single_select", "Escolha unica"],
   ["multi_select", "Multipla escolha"],
+  ["numeric_scale", "Escala numerica"],
   ["pain_scale", "Escala de dor"],
+  ["measure", "Medida com unidade"],
+  ["section", "Titulo/seção"],
 ];
 
 function newField(): FieldDraft {
   const id = `campo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-  return { id, label: "", type: "short_text", required: false, optionsText: "", minimum: 0, maximum: 10 };
+  return { id, label: "", type: "short_text", required: false, optionsText: "", description: "", unit: "", minimum: 0, maximum: 10 };
 }
 
 export default function NewAssessmentTemplatePage() {
   const router = useRouter();
   const [name, setName] = useState("Anamnese inicial");
   const [description, setDescription] = useState("");
+  const [audience, setAudience] = useState<"STUDENT" | "PROFESSIONAL">("STUDENT");
   const [fields, setFields] = useState<FieldDraft[]>([
     { ...newField(), id: "queixa_principal", label: "Queixa principal", type: "long_text", required: true },
     { ...newField(), id: "nivel_dor", label: "Nivel de dor", type: "pain_scale", required: false, minimum: 0, maximum: 10 },
@@ -54,6 +61,25 @@ export default function NewAssessmentTemplatePage() {
     setFields((current) => current.filter((_, fieldIndex) => fieldIndex !== index));
   }
 
+  function moveField(index: number, offset: number): void {
+    setFields((current) => {
+      const target = index + offset;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      const [field] = next.splice(index, 1);
+      next.splice(target, 0, field);
+      return next;
+    });
+  }
+
+  function duplicateField(index: number): void {
+    setFields((current) => {
+      const source = current[index];
+      const copy = { ...source, id: `${source.id}_copia_${Date.now()}` };
+      return [...current.slice(0, index + 1), copy, ...current.slice(index + 1)];
+    });
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -67,8 +93,10 @@ export default function NewAssessmentTemplatePage() {
       options: ["single_select", "multi_select"].includes(field.type)
         ? field.optionsText.split("\n").map((item) => item.trim()).filter(Boolean)
         : undefined,
-      minimum: ["number", "pain_scale"].includes(field.type) ? field.minimum : undefined,
-      maximum: ["number", "pain_scale"].includes(field.type) ? field.maximum : undefined,
+      description: field.description || undefined,
+      unit: field.unit || undefined,
+      minimum: ["number", "numeric_scale", "pain_scale", "measure"].includes(field.type) ? field.minimum : undefined,
+      maximum: ["number", "numeric_scale", "pain_scale", "measure"].includes(field.type) ? field.maximum : undefined,
     }));
 
     if (normalizedFields.some((field) => !field.label)) {
@@ -84,7 +112,7 @@ export default function NewAssessmentTemplatePage() {
 
     const result = await apiRequest("/assessment-templates", {
       method: "POST",
-      body: JSON.stringify({ name, description: description || undefined, fields: normalizedFields }),
+      body: JSON.stringify({ name, description: description || undefined, audience, fields: normalizedFields }),
     });
     setLoading(false);
     if (!result.ok) {
@@ -110,16 +138,26 @@ export default function NewAssessmentTemplatePage() {
             Descricao
             <Input value={description} onChange={(event) => setDescription(event.target.value)} />
           </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Publico
+            <select className={selectClassName} value={audience} onChange={(event) => setAudience(event.target.value as "STUDENT" | "PROFESSIONAL")}>
+              <option value="STUDENT">Aluno</option>
+              <option value="PROFESSIONAL">Profissional autorizado</option>
+            </select>
+          </label>
         </Card>
 
         <div className="grid gap-3">
           {fields.map((field, index) => (
             <Card key={field.id} className="grid gap-3">
               <div className="flex items-center justify-between gap-3">
-                <CardTitle>Pergunta {index + 1}</CardTitle>
-                <Button className="bg-white text-danger ring-1 ring-border hover:bg-background" type="button" onClick={() => removeField(index)} disabled={fields.length === 1}>
-                  Remover
-                </Button>
+                <CardTitle>{field.type === "section" ? "Secao" : `Pergunta ${index + 1}`}</CardTitle>
+                <div className="flex gap-1">
+                  <IconButton label="Mover para cima" disabled={index === 0} onClick={() => moveField(index, -1)}><ArrowUp size={16} /></IconButton>
+                  <IconButton label="Mover para baixo" disabled={index === fields.length - 1} onClick={() => moveField(index, 1)}><ArrowDown size={16} /></IconButton>
+                  <IconButton label="Duplicar campo" onClick={() => duplicateField(index)}><Copy size={16} /></IconButton>
+                  <IconButton label="Remover campo" disabled={fields.length === 1} onClick={() => removeField(index)}><Trash2 size={16} /></IconButton>
+                </div>
               </div>
               <label className="grid gap-2 text-sm font-medium">
                 Texto da pergunta
@@ -137,13 +175,17 @@ export default function NewAssessmentTemplatePage() {
                   Obrigatoria
                 </label>
               </div>
+              <label className="grid gap-2 text-sm font-medium">
+                Descricao de apoio
+                <Input value={field.description} onChange={(event) => updateField(index, { description: event.target.value })} />
+              </label>
               {["single_select", "multi_select"].includes(field.type) ? (
                 <label className="grid gap-2 text-sm font-medium">
                   Opcoes, uma por linha
                   <textarea className="min-h-28 rounded-md border border-border p-3 text-sm" value={field.optionsText} onChange={(event) => updateField(index, { optionsText: event.target.value })} />
                 </label>
               ) : null}
-              {["number", "pain_scale"].includes(field.type) ? (
+              {["number", "numeric_scale", "pain_scale", "measure"].includes(field.type) ? (
                 <div className="grid gap-3 md:grid-cols-2">
                   <label className="grid gap-2 text-sm font-medium">
                     Minimo
@@ -153,6 +195,12 @@ export default function NewAssessmentTemplatePage() {
                     Maximo
                     <Input type="number" value={field.maximum ?? 10} onChange={(event) => updateField(index, { maximum: Number(event.target.value) })} />
                   </label>
+                  {field.type === "measure" ? (
+                    <label className="grid gap-2 text-sm font-medium">
+                      Unidade
+                      <Input value={field.unit} onChange={(event) => updateField(index, { unit: event.target.value })} placeholder="cm" />
+                    </label>
+                  ) : null}
                 </div>
               ) : null}
             </Card>
@@ -173,3 +221,7 @@ export default function NewAssessmentTemplatePage() {
 
 const selectClassName =
   "min-h-11 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+
+function IconButton({ label, children, ...props }: { label: string; children: ReactNode; disabled?: boolean; onClick: () => void }) {
+  return <button aria-label={label} className="grid size-10 place-items-center rounded-md border border-border text-muted hover:bg-background disabled:opacity-40" type="button" {...props}>{children}</button>;
+}

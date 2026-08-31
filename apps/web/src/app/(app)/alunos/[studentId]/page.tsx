@@ -1,15 +1,17 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest, asArray, isRecord, readString, UnknownRecord } from "@/lib/api";
+import { apiRequest, asArray, isRecord, readNumber, readString, UnknownRecord } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/state";
 import { StatusBadge } from "@/components/domain/badges";
+import { useAuth } from "@/features/auth/auth-provider";
 
 type FieldType = "short_text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "numeric_scale" | "pain_scale" | "measure" | "section";
 
@@ -29,6 +31,8 @@ type Answers = Record<string, AnswerValue>;
 export default function StudentProfilePage() {
   const params = useParams<{ studentId: string }>();
   const queryClient = useQueryClient();
+  const { staff } = useAuth();
+  const [activeSection, setActiveSection] = useState("summary");
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [answers, setAnswers] = useState<Answers>({});
   const [compareA, setCompareA] = useState("");
@@ -61,6 +65,11 @@ export default function StudentProfilePage() {
     },
   });
 
+  const paymentsQuery = useQuery({ queryKey: ["payments", params.studentId], queryFn: async () => { const result = await apiRequest<unknown>(`/payments?studentId=${params.studentId}`); if (!result.ok) throw new Error(result.error.message); return asArray(result.data); } });
+  const schedulesQuery = useQuery({ queryKey: ["recurring-schedules", params.studentId], queryFn: async () => { const result = await apiRequest<unknown>("/recurring-schedules"); if (!result.ok) throw new Error(result.error.message); return asArray(result.data).filter((schedule) => asArray(schedule.enrollments).some((enrollment) => readString(asRecord(enrollment), "studentId") === params.studentId || readString(asRecord(asRecord(enrollment).student), "id") === params.studentId)); } });
+  const creditsQuery = useQuery({ queryKey: ["replacement-credits", params.studentId], queryFn: async () => { const result = await apiRequest<unknown>("/replacement-credits"); if (!result.ok) throw new Error(result.error.message); return asArray(result.data).filter((credit) => readString(asRecord(credit.student), "id") === params.studentId); } });
+  const clinicalAllowed = staff?.permissions.includes("assessments.clinical_read") === true;
+
   const templates = templatesQuery.data ?? [];
   const assessments = assessmentsQuery.data ?? [];
   const selectedTemplate = templates.find((template) => readString(template, "id") === selectedTemplateId);
@@ -90,7 +99,7 @@ export default function StudentProfilePage() {
   if (studentQuery.isLoading) return <LoadingState />;
   if (studentQuery.isError) return <ErrorState message={studentQuery.error.message} onRetry={() => void studentQuery.refetch()} />;
 
-  const student = studentQuery.data ?? {};
+  const student = (studentQuery.data ?? {}) as UnknownRecord & { plans?: UnknownRecord[] };
   const firstCompare = assessments.find((assessment) => readString(assessment, "id") === compareA) ?? latestCompleted;
   const secondCompare = assessments.find((assessment) => readString(assessment, "id") === compareB);
   const comparisonRows = firstCompare && secondCompare ? compareAssessments(firstCompare, secondCompare) : [];
@@ -108,7 +117,11 @@ export default function StudentProfilePage() {
         </div>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <nav aria-label="Seções do perfil" className="flex gap-2 overflow-x-auto border-b border-border pb-2">
+        {[['summary', 'Resumo'], ['schedule', 'Horarios e presenca'], ['finance', 'Plano e financeiro'], ['clinical', 'Anamneses e avaliacoes'], ['replacement', 'Reposicoes'], ['history', 'Historico']].map(([value, label]) => <button className={activeSection === value ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white" : "rounded-md px-3 py-2 text-sm font-semibold text-muted hover:bg-background"} key={value} onClick={() => setActiveSection(value)} type="button" aria-current={activeSection === value ? "page" : undefined}>{label}</button>)}
+      </nav>
+
+      {activeSection === "summary" ? <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardTitle>Resumo</CardTitle>
           <dl className="mt-3 grid gap-2 text-sm">
@@ -123,9 +136,16 @@ export default function StudentProfilePage() {
           <p className="mt-3 text-sm text-muted">{readString(student, "importantCareNotes") || "Nenhum cuidado importante registrado."}</p>
           <p className="mt-3 text-sm text-muted">{readString(student, "generalNotes") || "Sem observacoes gerais."}</p>
         </Card>
-      </div>
+      </div> : null}
 
-      <Card className="grid gap-4">
+      {activeSection === "schedule" ? <Card id="horarios-presenca" className="grid gap-4"><CardTitle>Horarios e presenca</CardTitle>{schedulesQuery.isLoading ? <LoadingState /> : null}{schedulesQuery.data?.map((schedule) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(schedule, "id")}><p className="font-semibold">{readString(schedule, "weekday")} · {readString(schedule, "startTime")}</p><p className="text-muted">{readString(asRecord(schedule.professional), "name")} · {readString(schedule, "durationMinutes")} minutos</p><Link className="text-primary" href="/agenda">Abrir na agenda</Link></div>)}{!schedulesQuery.isLoading && schedulesQuery.data?.length === 0 ? <EmptyState title="Sem horarios" description="Nenhum horario recorrente vinculado." /> : null}<p className="text-sm text-muted">O historico detalhado de presencas permanece disponivel na agenda e nas aulas relacionadas.</p></Card> : null}
+      {activeSection === "finance" ? <Card id="plano-financeiro" className="grid gap-4"><CardTitle>Plano e financeiro</CardTitle><p className="text-sm">Frequencia semanal: <strong>{readNumber(asRecord(student.plans?.[0]), "sessionsPerWeek") || "-"}</strong></p><p className="text-sm">Pagamentos vencidos ou proximos: <strong>{paymentsQuery.data?.filter((payment) => ["OVERDUE", "PENDING"].includes(readString(payment, "effectiveStatus") || readString(payment, "status"))).length ?? 0}</strong></p>{paymentsQuery.data?.map((payment) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(payment, "id")}><span>{readString(payment, "status")} · vencimento {new Date(readString(payment, "dueDate")).toLocaleDateString("pt-BR")}</span></div>)}</Card> : null}
+      {activeSection === "clinical" && clinicalAllowed ? <div id="anamneses-avaliacoes">{ /* The existing clinical editor follows below. */ }</div> : null}
+      {activeSection === "clinical" && !clinicalAllowed ? <EmptyState title="Acesso restrito" description="Somente profissionais autorizados podem visualizar respostas clínicas." /> : null}
+      {activeSection === "replacement" ? <Card id="reposicoes" className="grid gap-4"><CardTitle>Reposicoes</CardTitle><p className="text-sm">{creditsQuery.data?.filter((credit) => readString(credit, "status") === "AVAILABLE").length ?? 0} aula(s) para repor</p>{creditsQuery.data?.map((credit) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(credit, "id")}><p className="font-semibold">{readString(credit, "status")}</p><p className="text-muted">Validade: {new Date(readString(credit, "expiresAt")).toLocaleDateString("pt-BR")}</p><div className="mt-2 flex gap-2"><Link className="text-primary" href="/reposicoes">Agendar reposicao</Link>{readString(credit, "status") === "AVAILABLE" && staff?.permissions.includes("attendance.manage") ? <Link className="text-primary" href="/reposicoes">Gerar link</Link> : null}</div></div>)}</Card> : null}
+      {activeSection === "history" ? <Card id="historico" className="grid gap-4"><CardTitle>Historico operacional</CardTitle><p className="text-sm text-muted">Criado em {new Date(readString(student, "createdAt")).toLocaleDateString("pt-BR")} · atualizado em {new Date(readString(student, "updatedAt")).toLocaleDateString("pt-BR")}</p><p className="text-sm text-muted">Eventos clinicos e respostas nao sao exibidos nesta area.</p></Card> : null}
+
+      {activeSection === "clinical" && clinicalAllowed ? <Card className="grid gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <CardTitle>Realizar avaliacao</CardTitle>
@@ -171,9 +191,9 @@ export default function StudentProfilePage() {
             </Button>
           </form>
         ) : null}
-      </Card>
+      </Card> : null}
 
-      <Card className="grid gap-4">
+      {activeSection === "clinical" && clinicalAllowed ? <Card className="grid gap-4">
         <CardTitle>Avaliacoes anteriores</CardTitle>
         {assessmentsQuery.isLoading ? <LoadingState /> : null}
         {assessments.length === 0 && !assessmentsQuery.isLoading ? <EmptyState title="Sem avaliacoes" description="Nenhuma avaliacao registrada para este aluno." /> : null}
@@ -185,9 +205,9 @@ export default function StudentProfilePage() {
             </div>
           ))}
         </div>
-      </Card>
+      </Card> : null}
 
-      <Card className="grid gap-4">
+      {activeSection === "clinical" && clinicalAllowed ? <Card className="grid gap-4">
         <CardTitle>Comparar avaliacoes</CardTitle>
         <div className="grid gap-3 md:grid-cols-2">
           <AssessmentSelect label="Avaliacao base" value={compareA} onChange={setCompareA} assessments={assessments} fallbackLabel="Ultima concluida" />
@@ -207,7 +227,7 @@ export default function StudentProfilePage() {
         ) : (
           <p className="text-sm text-muted">Selecione duas avaliacoes para comparar respostas iguais e diferentes.</p>
         )}
-      </Card>
+      </Card> : null}
     </section>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import {
   Activity,
   CalendarDays,
@@ -13,10 +14,13 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  UserPlus,
 } from 'lucide-react';
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/features/auth/auth-provider';
+import { apiRequest } from '@/lib/api';
 import { hasPermission, Permission } from '@/lib/permissions';
+import { applyBrandColor, normalizeStudio, studioInitials } from '@/lib/studio-branding';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -31,6 +35,8 @@ const navItems: NavItem[] = [
   { href: '/', label: 'Inicio', permission: 'dashboard.read', icon: <Home size={18} /> },
   { href: '/agenda', label: 'Agenda', permission: 'classes.read_own', icon: <CalendarDays size={18} /> },
   { href: '/alunos', label: 'Alunos', permission: 'students.read', icon: <Users size={18} /> },
+  { href: '/cadastros-recebidos', label: 'Cadastros recebidos', permission: 'assessments.read', icon: <UserPlus size={18} /> },
+  { href: '/cadastros-recebidos/novo', label: 'Novo link publico', permission: 'assessment_templates.manage', icon: <UserPlus size={18} /> },
   { href: '/experimentais', label: 'Experimentais', permission: 'trial_students.manage', icon: <Activity size={18} /> },
   { href: '/reposicoes', label: 'Reposicoes', permission: 'attendance.read', icon: <ClipboardList size={18} /> },
   { href: '/financeiro', label: 'Financeiro', permission: 'payments.read', icon: <CreditCard size={18} /> },
@@ -42,6 +48,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { staff, lock, logoutStudio } = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const studioQuery = useQuery({
+    queryKey: ['studio-current'],
+    queryFn: async () => {
+      const result = await apiRequest<unknown>('/studios/current');
+      if (!result.ok) throw new Error(result.error.message);
+      return normalizeStudio(result.data);
+    },
+  });
+
+  const studio = studioQuery.data;
+
+  useEffect(() => {
+    if (studio?.brandColor) {
+      applyBrandColor(studio.brandColor);
+    }
+  }, [studio?.brandColor]);
 
   const visibleItems = useMemo(
     () => navItems.filter((item) => hasPermission(staff?.permissions, item.permission)),
@@ -57,14 +79,26 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       >
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase text-primary">Pilates Manager</p>
-            <h1 className="text-lg font-semibold">Painel</h1>
+          <div className="flex min-w-0 items-center gap-3">
+            <StudioMark name={studio?.name ?? 'Pilates Manager'} logoUrl={studio?.logo?.downloadUrl} />
+            <div className="min-w-0">
+              <p className="truncate text-xs font-bold uppercase text-primary">Pilates Manager</p>
+              <h1 className="truncate text-lg font-semibold">{studio?.name ?? 'Painel'}</h1>
+            </div>
           </div>
           <button className="lg:hidden" onClick={() => setOpen(false)} aria-label="Fechar menu">
             x
           </button>
         </div>
+        {!studio?.onboardingCompletedAt && hasPermission(staff?.permissions, 'studio_settings.manage') ? (
+          <Link
+            className="mt-4 block rounded-md border border-primary/30 bg-background px-3 py-2 text-sm font-semibold text-primary"
+            href="/onboarding"
+            onClick={() => setOpen(false)}
+          >
+            Concluir configuracao
+          </Link>
+        ) : null}
         <nav className="mt-6 grid gap-1">
           {visibleItems.map((item) => (
             <Link
@@ -120,6 +154,24 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         ))}
       </nav>
+    </div>
+  );
+}
+
+function StudioMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
+  if (logoUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        alt={`Logo ${name}`}
+        className="size-10 rounded-md border border-border bg-white object-contain"
+        src={logoUrl}
+      />
+    );
+  }
+  return (
+    <div className="grid size-10 place-items-center rounded-md bg-primary text-sm font-bold text-white">
+      {studioInitials(name)}
     </div>
   );
 }

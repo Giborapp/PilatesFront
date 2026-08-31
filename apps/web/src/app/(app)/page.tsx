@@ -39,6 +39,8 @@ export default function DashboardPage() {
   const duePayments = asArray(query.data?.duePayments);
   const trialProcesses = asArray(query.data?.trialProcesses);
   const expiringCredits = asArray(query.data?.expiringCredits);
+  const pendingIntakes = asArray(query.data?.pendingIntakes);
+  const counts = isRecord(query.data?.dashboardCounts) ? query.data.dashboardCounts : {};
   const cancelledBookings = useMemo(
     () =>
       classes.flatMap((classSession) =>
@@ -97,10 +99,16 @@ export default function DashboardPage() {
 
       {!query.isLoading && !query.isError ? (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Aulas hoje" value={classes.length} />
-          <MetricCard label="Pagamentos vencidos" value={overduePayments.length} tone={overduePayments.length > 0 ? "danger" : "default"} />
-          <MetricCard label="Vencem em 7 dias" value={duePayments.length} />
-          <MetricCard label="Reposicoes vencendo" value={expiringCredits.length} tone={expiringCredits.length > 0 ? "warning" : "default"} />
+          <ActionMetricCard href="/agenda" label="Aulas de hoje" value={readNumber(counts, "classesToday", classes.length)} />
+          <ActionMetricCard href="/agenda" label="Presencas pendentes" value={readNumber(counts, "pendingAttendances")} />
+          <ActionMetricCard href="/financeiro" label="Pagamentos vencidos" value={readNumber(counts, "overduePayments", overduePayments.length)} tone={readNumber(counts, "overduePayments", overduePayments.length) > 0 ? "danger" : "default"} />
+          <ActionMetricCard href="/financeiro" label="Pagamentos proximos" value={readNumber(counts, "duePayments", duePayments.length)} />
+          <ActionMetricCard href="/cadastros-recebidos" label="Cadastros aguardando" value={readNumber(counts, "pendingIntakes", pendingIntakes.length)} tone={readNumber(counts, "pendingIntakes", pendingIntakes.length) > 0 ? "warning" : "default"} />
+          <ActionMetricCard href="/avaliacoes" label="Avaliacoes pendentes" value={readNumber(counts, "pendingAssessments")} />
+          <ActionMetricCard href="/reposicoes" label="Reposicoes disponiveis" value={readNumber(counts, "availableCredits")} />
+          <ActionMetricCard href="/reposicoes?expiring=30" label="Reposicoes em 30 dias" value={readNumber(counts, "expiringCredits30")} tone="warning" />
+          <ActionMetricCard href="/reposicoes?expiring=7" label="Reposicoes em 7 dias" value={readNumber(counts, "expiringCredits7")} tone="warning" />
+          <ActionMetricCard href="/agenda?nearCapacity=true" label="Horarios proximos da capacidade" value={readNumber(counts, "nearCapacity")} />
         </div>
       ) : null}
 
@@ -148,10 +156,17 @@ export default function DashboardPage() {
           <DashboardList title="Acompanhar hoje" empty="Sem experimentais ou reposicoes urgentes." records={[...trialProcesses, ...expiringCredits]}>
             {(record) => isRecord(record.student) ? <StudentAlert record={record} /> : <GenericAlert record={record} />}
           </DashboardList>
+          <DashboardList title="Cadastros aguardando" empty="Nenhum cadastro aguardando revisao." records={pendingIntakes}>
+            {() => <Link className="font-semibold text-primary" href="/cadastros-recebidos">Abrir cadastros recebidos</Link>}
+          </DashboardList>
         </div>
       ) : null}
     </section>
   );
+}
+
+function ActionMetricCard({ href, ...props }: { href: string; label: string; value: number; tone?: "default" | "danger" | "warning" }) {
+  return <Link href={href} aria-label={`${props.label}: ${props.value}`}><MetricCard {...props} /></Link>;
 }
 
 function MetricCard({
