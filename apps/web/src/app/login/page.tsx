@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, isRecord, readString } from "@/lib/api";
 import { useAuth, StudioDevice } from "@/features/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,19 +16,23 @@ type LoginResponse = {
     locale: string;
   };
   deviceExpiresAt: string;
+  accessToken?: string;
+  staff?: { id: string; name: string; role: string; permissions: string[] };
 };
 
 type Mode = "login" | "register";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setDeviceOnly } = useAuth();
+  const { setDeviceOnly, setAuthenticated } = useAuth();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [studioName, setStudioName] = useState("");
-  const [adminName, setAdminName] = useState("");
-  const [adminPin, setAdminPin] = useState("");
+  const [responsibleCpf, setResponsibleCpf] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [subscriptionPlan, setSubscriptionPlan] = useState("STARTER");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -73,8 +77,9 @@ export default function LoginPage() {
         studioName,
         email,
         password,
-        adminName,
-        adminPin,
+        responsibleCpf: responsibleCpf.replace(/\D/g, ""),
+        cnpj: cnpj.replace(/\D/g, "") || undefined,
+        subscriptionPlan,
         deviceName: "Web",
       }),
     });
@@ -86,6 +91,18 @@ export default function LoginPage() {
       return;
     }
 
+    if (result.data.accessToken && result.data.staff) {
+      setAuthenticated(result.data.accessToken, result.data.staff);
+      if (logoFile) {
+        try {
+          await uploadRegistrationLogo(logoFile);
+        } catch (uploadError) {
+          setError(uploadError instanceof Error ? uploadError.message : "Nao foi possivel enviar a logo.");
+        }
+      }
+      router.replace("/onboarding");
+      return;
+    }
     setDeviceOnly({
       connected: true,
       studio: {
@@ -222,30 +239,27 @@ export default function LoginPage() {
                 </button>
               </span>
             </label>
-            <div className="grid gap-4 md:grid-cols-[1fr_120px]">
-              <label className="grid gap-2 text-sm font-medium">
-                Nome do admin
-                <Input
-                  value={adminName}
-                  onChange={(event) => setAdminName(event.target.value)}
-                  required
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium">
-                PIN admin
-                <Input
-                  value={adminPin}
-                  onChange={(event) =>
-                    setAdminPin(
-                      event.target.value.replace(/\D/g, "").slice(0, 4),
-                    )
-                  }
-                  inputMode="numeric"
-                  pattern="\d{4}"
-                  required
-                />
-              </label>
-            </div>
+            <label className="grid gap-2 text-sm font-medium">
+              CPF do responsavel
+              <Input value={responsibleCpf} onChange={(event) => setResponsibleCpf(event.target.value)} inputMode="numeric" required minLength={11} maxLength={14} />
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              CNPJ (opcional)
+              <Input value={cnpj} onChange={(event) => setCnpj(event.target.value)} inputMode="numeric" maxLength={18} />
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              Plano mensal (simulacao)
+              <select className="min-h-11 rounded-md border border-border bg-white px-3" value={subscriptionPlan} onChange={(event) => setSubscriptionPlan(event.target.value)}>
+                <option value="STARTER">Essencial - R$ 99/mes</option>
+                <option value="PROFESSIONAL">Profissional - R$ 179/mes</option>
+              </select>
+              <span className="text-xs text-muted">Nenhuma cobranca real e feita nesta versao.</span>
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              Logo do studio (opcional)
+              <Input accept="image/png,image/webp" type="file" onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)} />
+              <span className="text-xs text-muted">PNG ou WebP, preferencialmente transparente, ate 2 MB.</span>
+            </label>
             {error ? (
               <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">
                 {error}
@@ -259,5 +273,25 @@ export default function LoginPage() {
       </section>
     </main>
   );
+}
+
+async function uploadRegistrationLogo(file: File): Promise<void> {
+  if (!['image/png', 'image/webp'].includes(file.type) || file.size > 2_000_000) {
+    throw new Error('A logo deve ser PNG ou WebP e ter no maximo 2 MB.');
+  }
+  const request = await apiRequest<unknown>('/studios/logo/uploads', {
+    method: 'POST',
+    body: JSON.stringify({ originalName: file.name, mimeType: file.type, size: file.size }),
+  });
+  if (!request.ok || !isRecord(request.data) || !isRecord(request.data.fileAsset)) {
+    throw new Error(request.ok ? 'Resposta de upload invalida.' : request.error.message);
+  }
+  const uploadUrl = readString(request.data, 'uploadUrl');
+  const fileId = readString(request.data.fileAsset, 'id');
+  if (!uploadUrl || !fileId) throw new Error('Resposta de upload incompleta.');
+  const upload = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+  if (!upload.ok) throw new Error(`Falha ao enviar logo (${upload.status}).`);
+  const confirm = await apiRequest(`/studios/logo/${fileId}/confirm`, { method: 'POST' });
+  if (!confirm.ok) throw new Error(confirm.error.message);
 }
 

@@ -43,6 +43,7 @@ export type StudioProfile = {
   id: string;
   name: string;
   email: string;
+  responsibleCpf?: string | null;
   phone?: string | null;
   whatsapp?: string | null;
   zipCode?: string | null;
@@ -71,6 +72,7 @@ export function normalizeStudio(value: unknown): StudioProfile | null {
     id: readString(value, 'id'),
     name: readString(value, 'name', 'Estudio'),
     email: readString(value, 'email'),
+    responsibleCpf: readOptionalString(value, 'responsibleCpf'),
     phone: readOptionalString(value, 'phone'),
     whatsapp: readOptionalString(value, 'whatsapp'),
     zipCode: readOptionalString(value, 'zipCode'),

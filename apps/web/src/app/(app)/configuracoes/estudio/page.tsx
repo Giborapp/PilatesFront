@@ -56,6 +56,7 @@ function StudioSettingsPanel() {
           <CardTitle>{studio?.name ?? 'Estudio'}</CardTitle>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             <Info label="E-mail" value={studio?.email} />
+            <Info label="CPF do responsavel" value={studio?.responsibleCpf} />
             <Info label="Telefone" value={studio?.phone} />
             <Info label="WhatsApp" value={studio?.whatsapp} />
             <Info label="CNPJ" value={studio?.cnpj} />

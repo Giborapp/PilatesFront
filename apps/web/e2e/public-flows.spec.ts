@@ -26,6 +26,7 @@ test.describe('public flows', () => {
     await page.getByLabel('Data de nascimento').fill('1990-01-01');
     await page.getByLabel('Telefone/WhatsApp').fill('11999999999');
     await page.getByLabel('Contato de emergencia').fill('Contato Falso');
+    await page.getByLabel('Relacao com o aluno').fill('Mae');
     await page.getByLabel('Telefone de emergencia').fill('11888888888');
     await page.getByLabel('Aceito o aviso de privacidade').check();
     await page.getByLabel('Declaro que as informacoes sao verdadeiras').check();
