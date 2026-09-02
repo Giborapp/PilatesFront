@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
   { href: '/financeiro', label: 'Financeiro', permission: 'payments.read', icon: <CreditCard size={18} /> },
   { href: '/equipe', label: 'Equipe', permission: 'staff.manage', icon: <ShieldCheck size={18} /> },
   { href: '/configuracoes', label: 'Gestao', permission: 'assessments.read', icon: <Settings size={18} /> },
+  { href: '/configuracoes/assinatura', label: 'Assinatura', permission: 'studio_settings.manage', icon: <CreditCard size={18} /> },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

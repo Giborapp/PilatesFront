@@ -4,6 +4,7 @@ import { Card, CardTitle } from '@/components/ui/card';
 const links = [
   ['/avaliacoes/modelos', 'Avaliacoes e anamneses'],
   ['/configuracoes/estudio', 'Estudio'],
+  ['/configuracoes/assinatura', 'Assinatura mensal'],
   ['/configuracoes/unidades', 'Unidades'],
   ['/configuracoes/salas', 'Salas'],
   ['/configuracoes/reposicoes', 'Cancelamentos e reposicoes'],
