@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { apiRequest, isRecord, readString } from "@/lib/api";
+import { API_URL, apiRequest, getAccessToken, isRecord, readString } from "@/lib/api";
 import { formatCnpj, formatCpf, onlyDigits } from "@/lib/br-documents";
 import { useAuth, StudioDevice } from "@/features/auth/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -301,12 +301,29 @@ async function uploadRegistrationLogo(file: File): Promise<void> {
   if (!request.ok || !isRecord(request.data) || !isRecord(request.data.fileAsset)) {
     throw new Error(request.ok ? 'Resposta de upload invalida.' : request.error.message);
   }
-  const uploadUrl = readString(request.data, 'uploadUrl');
   const fileId = readString(request.data.fileAsset, 'id');
-  if (!uploadUrl || !fileId) throw new Error('Resposta de upload incompleta.');
-  const upload = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
-  if (!upload.ok) throw new Error(`Falha ao enviar logo (${upload.status}).`);
+  if (!fileId) throw new Error('Resposta de upload incompleta.');
+  await uploadLogoContent(fileId, file);
   const confirm = await apiRequest(`/studios/logo/${fileId}/confirm`, { method: 'POST' });
   if (!confirm.ok) throw new Error(confirm.error.message);
+}
+
+async function uploadLogoContent(fileId: string, file: File): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('Sessao expirada ou invalida.');
+  }
+  const response = await fetch(`${API_URL}/studios/logo/${fileId}/content`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': file.type,
+    },
+    credentials: 'include',
+    body: file,
+  }).catch(() => null);
+  if (!response?.ok) {
+    throw new Error(response ? `Falha ao enviar logo (${response.status}).` : 'Nao foi possivel enviar a logo.');
+  }
 }
 
