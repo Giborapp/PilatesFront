@@ -275,21 +275,25 @@ export default function OnboardingPage() {
       {step === 2 ? (
         <Card>
           <CardTitle>Operacao</CardTitle>
+          <p className="mt-2 text-sm text-muted">
+            Defina as regras padrao usadas na agenda, faltas justificadas e creditos de reposicao.
+          </p>
           <form className="mt-4 grid gap-4" onSubmit={submitOperation}>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <NumberField label="Duracao padrao" value={operation.defaultClassDurationMinutes} min={15} onChange={(value) => setOperation({ ...operation, defaultClassDurationMinutes: value })} />
-              <NumberField label="Capacidade padrao" value={operation.defaultClassCapacity} min={1} onChange={(value) => setOperation({ ...operation, defaultClassCapacity: value })} />
-              <NumberField label="Antecedencia para cancelar" value={operation.cancellationNoticeHours} min={0} onChange={(value) => setOperation({ ...operation, cancellationNoticeHours: value })} />
-              <NumberField label="Faltas justificadas" value={operation.maxJustifiedAbsences} min={0} onChange={(value) => setOperation({ ...operation, maxJustifiedAbsences: value })} />
+              <NumberField label="Duracao padrao da aula" help="Tempo sugerido ao criar novos horarios, em minutos." value={operation.defaultClassDurationMinutes} min={15} onChange={(value) => setOperation({ ...operation, defaultClassDurationMinutes: value })} />
+              <NumberField label="Capacidade padrao da turma" help="Quantidade de alunos sugerida ao criar uma sala ou horario." value={operation.defaultClassCapacity} min={1} onChange={(value) => setOperation({ ...operation, defaultClassCapacity: value })} />
+              <NumberField label="Antecedencia para cancelamento" help="Horas minimas antes da aula para o aluno cancelar sem atendimento manual." value={operation.cancellationNoticeHours} min={0} onChange={(value) => setOperation({ ...operation, cancellationNoticeHours: value })} />
+              <NumberField label="Faltas justificadas por periodo" help="Limite de faltas que podem gerar reposicao dentro do periodo configurado." value={operation.maxJustifiedAbsences} min={0} onChange={(value) => setOperation({ ...operation, maxJustifiedAbsences: value })} />
             </div>
             <label className="grid gap-2 text-sm font-medium">
-              Validade da reposicao
+              Validade do credito de reposicao
               <select className={selectClassName} value={operation.replacementCreditValidityDays} onChange={(event) => setOperation({ ...operation, replacementCreditValidityDays: Number(event.target.value) })}>
                 {[30, 60, 90].map((days) => <option key={days} value={days}>{days} dias</option>)}
               </select>
+              <span className="text-xs font-normal text-muted">Prazo para o aluno usar a reposicao depois que o credito for criado.</span>
             </label>
-            <Toggle label="Exigir texto de justificativa" checked={operation.requireJustificationText} onChange={(checked) => setOperation({ ...operation, requireJustificationText: checked })} />
-            <Toggle label="Consumir credito se faltar a reposicao" checked={operation.replacementNoShowConsumesCredit} onChange={(checked) => setOperation({ ...operation, replacementNoShowConsumesCredit: checked })} />
+            <Toggle label="Exigir texto de justificativa" help="Quando ativo, a equipe precisa informar o motivo ao marcar falta justificada." checked={operation.requireJustificationText} onChange={(checked) => setOperation({ ...operation, requireJustificationText: checked })} />
+            <Toggle label="Consumir credito se o aluno faltar a reposicao" help="Quando ativo, uma falta na aula de reposicao usa o credito mesmo sem presenca." checked={operation.replacementNoShowConsumesCredit} onChange={(checked) => setOperation({ ...operation, replacementNoShowConsumesCredit: checked })} />
             <Button disabled={saving}>{saving ? 'Salvando...' : 'Salvar e continuar'}</Button>
           </form>
         </Card>
@@ -419,20 +423,24 @@ function TextField({
   );
 }
 
-function NumberField({ label, value, min, onChange }: { label: string; value: number; min: number; onChange: (value: number) => void }) {
+function NumberField({ label, help, value, min, onChange }: { label: string; help?: string; value: number; min: number; onChange: (value: number) => void }) {
   return (
     <label className="grid gap-2 text-sm font-medium">
       {label}
       <Input min={min} type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      {help ? <span className="text-xs font-normal text-muted">{help}</span> : null}
     </label>
   );
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+function Toggle({ label, help, checked, onChange }: { label: string; help?: string; checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <label className="flex items-center gap-3 text-sm font-medium">
-      <input checked={checked} className="size-5 accent-primary" type="checkbox" onChange={(event) => onChange(event.target.checked)} />
-      {label}
+    <label className="flex items-start gap-3 rounded-md border border-border bg-background p-3 text-sm font-medium">
+      <input checked={checked} className="mt-0.5 size-5 accent-primary" type="checkbox" onChange={(event) => onChange(event.target.checked)} />
+      <span>
+        <span className="block">{label}</span>
+        {help ? <span className="mt-1 block text-xs font-normal text-muted">{help}</span> : null}
+      </span>
     </label>
   );
 }
