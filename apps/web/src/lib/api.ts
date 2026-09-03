@@ -1,5 +1,6 @@
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'https://pilates-manager-api.onrender.com';
+export const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL ?? 'https://pilates-manager-api.onrender.com'
+).replace(/\/+$/, '');
 
 const API_TIMEOUT_MS = 15_000;
 

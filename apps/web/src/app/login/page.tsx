@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { apiRequest, isRecord, readString } from "@/lib/api";
+import { formatCnpj, formatCpf, onlyDigits } from "@/lib/br-documents";
 import { useAuth, StudioDevice } from "@/features/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,8 +78,8 @@ export default function LoginPage() {
         studioName,
         email,
         password,
-        responsibleCpf: responsibleCpf.replace(/\D/g, ""),
-        cnpj: cnpj.replace(/\D/g, "") || undefined,
+        responsibleCpf: onlyDigits(responsibleCpf),
+        cnpj: onlyDigits(cnpj) || undefined,
         subscriptionPlan,
         deviceName: "Web",
       }),
@@ -241,11 +242,25 @@ export default function LoginPage() {
             </label>
             <label className="grid gap-2 text-sm font-medium">
               CPF do responsavel
-              <Input value={responsibleCpf} onChange={(event) => setResponsibleCpf(event.target.value)} inputMode="numeric" required minLength={11} maxLength={14} />
+              <Input
+                value={responsibleCpf}
+                onChange={(event) => setResponsibleCpf(formatCpf(event.target.value))}
+                inputMode="numeric"
+                required
+                minLength={14}
+                maxLength={14}
+                placeholder="000.000.000-00"
+              />
             </label>
             <label className="grid gap-2 text-sm font-medium">
               CNPJ (opcional)
-              <Input value={cnpj} onChange={(event) => setCnpj(event.target.value)} inputMode="numeric" maxLength={18} />
+              <Input
+                value={cnpj}
+                onChange={(event) => setCnpj(formatCnpj(event.target.value))}
+                inputMode="numeric"
+                maxLength={18}
+                placeholder="00.000.000/0000-00"
+              />
             </label>
             <label className="grid gap-2 text-sm font-medium">
               Plano mensal (simulacao)
