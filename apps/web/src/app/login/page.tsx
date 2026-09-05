@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [studioName, setStudioName] = useState("");
+  const [adminPin, setAdminPin] = useState("");
   const [responsibleCpf, setResponsibleCpf] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [subscriptionPlan, setSubscriptionPlan] = useState("STARTER");
@@ -78,6 +79,7 @@ export default function LoginPage() {
         studioName,
         email,
         password,
+        adminPin,
         responsibleCpf: onlyDigits(responsibleCpf),
         cnpj: onlyDigits(cnpj) || undefined,
         subscriptionPlan,
@@ -251,6 +253,20 @@ export default function LoginPage() {
                 maxLength={14}
                 placeholder="000.000.000-00"
               />
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              PIN do administrador
+              <Input
+                value={adminPin}
+                onChange={(event) => setAdminPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                inputMode="numeric"
+                pattern="\d{4}"
+                required
+                minLength={4}
+                maxLength={4}
+                placeholder="0000"
+              />
+              <span className="text-xs text-muted">Sera usado para desbloquear o acesso administrativo neste dispositivo.</span>
             </label>
             <label className="grid gap-2 text-sm font-medium">
               CNPJ (opcional)
