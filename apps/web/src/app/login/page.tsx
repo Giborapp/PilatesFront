@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { API_URL, apiRequest, getAccessToken, isRecord, readString } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 import { formatCnpj, formatCpf, onlyDigits } from "@/lib/br-documents";
 import { useAuth, StudioDevice } from "@/features/auth/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,6 @@ export default function LoginPage() {
   const [responsibleCpf, setResponsibleCpf] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [subscriptionPlan, setSubscriptionPlan] = useState("STARTER");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -96,13 +95,6 @@ export default function LoginPage() {
 
     if (result.data.accessToken && result.data.staff) {
       setAuthenticated(result.data.accessToken, result.data.staff);
-      if (logoFile) {
-        try {
-          await uploadRegistrationLogo(logoFile);
-        } catch (uploadError) {
-          setError(uploadError instanceof Error ? uploadError.message : "Nao foi possivel enviar a logo.");
-        }
-      }
       router.replace("/onboarding");
       return;
     }
@@ -227,7 +219,8 @@ export default function LoginPage() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
-                  minLength={8}
+                  minLength={6}
+                  pattern="(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{6,}"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   className="pr-11"
@@ -241,6 +234,7 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </span>
+              <span className="text-xs text-muted">Minimo de 6 caracteres, com uma letra maiuscula e um caractere especial.</span>
             </label>
             <label className="grid gap-2 text-sm font-medium">
               CPF do responsavel
@@ -286,11 +280,6 @@ export default function LoginPage() {
               </select>
               <span className="text-xs text-muted">Nenhuma cobranca real e feita nesta versao.</span>
             </label>
-            <label className="grid gap-2 text-sm font-medium">
-              Logo do studio (opcional)
-              <Input accept="image/png,image/webp" type="file" onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)} />
-              <span className="text-xs text-muted">PNG ou WebP, preferencialmente transparente, ate 2 MB.</span>
-            </label>
             {error ? (
               <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">
                 {error}
@@ -304,42 +293,5 @@ export default function LoginPage() {
       </section>
     </main>
   );
-}
-
-async function uploadRegistrationLogo(file: File): Promise<void> {
-  if (!['image/png', 'image/webp'].includes(file.type) || file.size > 2_000_000) {
-    throw new Error('A logo deve ser PNG ou WebP e ter no maximo 2 MB.');
-  }
-  const request = await apiRequest<unknown>('/studios/logo/uploads', {
-    method: 'POST',
-    body: JSON.stringify({ originalName: file.name, mimeType: file.type, size: file.size }),
-  });
-  if (!request.ok || !isRecord(request.data) || !isRecord(request.data.fileAsset)) {
-    throw new Error(request.ok ? 'Resposta de upload invalida.' : request.error.message);
-  }
-  const fileId = readString(request.data.fileAsset, 'id');
-  if (!fileId) throw new Error('Resposta de upload incompleta.');
-  await uploadLogoContent(fileId, file);
-  const confirm = await apiRequest(`/studios/logo/${fileId}/confirm`, { method: 'POST' });
-  if (!confirm.ok) throw new Error(confirm.error.message);
-}
-
-async function uploadLogoContent(fileId: string, file: File): Promise<void> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('Sessao expirada ou invalida.');
-  }
-  const response = await fetch(`${API_URL}/studios/logo/${fileId}/content`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': file.type,
-    },
-    credentials: 'include',
-    body: file,
-  }).catch(() => null);
-  if (!response?.ok) {
-    throw new Error(response ? `Falha ao enviar logo (${response.status}).` : 'Nao foi possivel enviar a logo.');
-  }
 }
 
