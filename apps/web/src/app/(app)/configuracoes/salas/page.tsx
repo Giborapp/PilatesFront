@@ -6,7 +6,7 @@ export default function RoomsSettingsPage() {
     <PermissionGate permission="studio_settings.manage">
       <RecordList
         title="Salas"
-        description="Salas e capacidade padrao."
+        description="Salas e capacidade padrão."
         endpoint="/rooms"
         queryKey="rooms"
         fields={[

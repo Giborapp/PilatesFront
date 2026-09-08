@@ -5,8 +5,8 @@ export default function AssessmentsPage() {
   return (
     <PermissionGate permission="assessments.read">
       <RecordList
-        title="Avaliacoes"
-        description="Rascunhos, avaliacoes concluidas e historico retornados pelo backend."
+        title="Avaliações"
+        description="Rascunhos, avaliações concluídas e histórico retornados pelo backend."
         endpoint="/assessments"
         queryKey="assessments"
         fields={[

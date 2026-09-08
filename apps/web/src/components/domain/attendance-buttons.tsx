@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 const actions = [
   ["PRESENT", "Presente"],
-  ["ABSENT", "Nao veio"],
+  ["ABSENT", "Não veio"],
   ["JUSTIFIED_ABSENCE", "Justificada"],
 ] as const;
 

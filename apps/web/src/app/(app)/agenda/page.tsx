@@ -96,7 +96,7 @@ export default function AgendaPage() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <CardTitle>Criar horario semanal</CardTitle>
+          <CardTitle>Criar horário semanal</CardTitle>
           <form className="mt-4 grid gap-4" onSubmit={submitSchedule}>
             <div className="grid gap-4 md:grid-cols-2">
               <Select
@@ -138,7 +138,7 @@ export default function AgendaPage() {
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium">
-                Duracao
+                Duração
                 <Input
                   value={durationMinutes}
                   min={15}
@@ -168,7 +168,7 @@ export default function AgendaPage() {
             <Button
               disabled={createSchedule.isPending || !professionalId}
             >
-              {createSchedule.isPending ? "Criando..." : "Criar horario"}
+              {createSchedule.isPending ? "Criando..." : "Criar horário"}
             </Button>
           </form>
         </Card>
@@ -183,8 +183,8 @@ export default function AgendaPage() {
       ) : null}
       {schedulesQuery.data.length === 0 && !schedulesQuery.isLoading ? (
         <EmptyState
-          title="Sem horarios"
-          description="Nenhum horario semanal criado."
+          title="Sem horários"
+          description="Nenhum horário semanal criado."
         />
       ) : null}
 
@@ -286,7 +286,7 @@ function ScheduleCard({ schedule, students }: { schedule: UnknownRecord; student
           </p>
           {readString(schedule, "pauseUntil") ? (
             <p className="mt-1 text-sm text-warning">
-              Pausado ate{" "}
+              Pausado até{" "}
               {new Date(readString(schedule, "pauseUntil")).toLocaleDateString(
                 "pt-BR",
               )}
@@ -380,7 +380,7 @@ function ScheduleCard({ schedule, students }: { schedule: UnknownRecord; student
             />
           </label>
           <label className="grid gap-2 text-sm font-medium">
-            Duracao
+            Duração
             <Input
               min={15}
               onChange={(event) =>
@@ -421,7 +421,7 @@ function ScheduleCard({ schedule, students }: { schedule: UnknownRecord; student
           <p className="text-sm font-semibold">
             {confirmAction === "pause"
               ? "Confirmar pausa"
-              : "Confirmar exclusao"}
+              : "Confirmar exclusão"}
           </p>
           {confirmAction === "pause" ? (
             <label className="mt-3 grid max-w-xs gap-2 text-sm font-medium">

@@ -109,7 +109,7 @@ export default function OnboardingPage() {
   }, [studio]);
 
   const activeLogo = logoPreview || studio?.logo?.downloadUrl || '';
-  const completionLabel = studio?.onboardingCompletedAt ? 'Concluido' : 'Em andamento';
+  const completionLabel = studio?.onboardingCompletedAt ? 'Concluído' : 'Em andamento';
 
   async function submitProfile(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -153,7 +153,7 @@ export default function OnboardingPage() {
       applyBrandColor(brandColor);
       setLogoFile(null);
       setLogoPreview('');
-      setMessage('Configuracao concluida.');
+      setMessage('Configuração concluída.');
       await invalidateStudio(queryClient);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Erro ao salvar identidade visual.');
@@ -194,7 +194,7 @@ export default function OnboardingPage() {
     });
     if (!request.ok) throw new Error(request.error.message);
     if (!isRecord(request.data) || !isRecord(request.data.fileAsset)) {
-      throw new Error('Resposta de upload invalida.');
+      throw new Error('Resposta de upload inválida.');
     }
     const fileId = readString(request.data.fileAsset, 'id');
     if (!fileId) {
@@ -227,8 +227,8 @@ export default function OnboardingPage() {
     <section className="grid gap-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase text-primary">Configuracao inicial</p>
-          <h1 className="text-2xl font-semibold">{studio?.name ?? 'Estudio'}</h1>
+          <p className="text-sm font-semibold uppercase text-primary">Configuração inicial</p>
+          <h1 className="text-2xl font-semibold">{studio?.name ?? 'Estúdio'}</h1>
           <p className="mt-1 text-sm text-muted">{completionLabel}</p>
         </div>
         <StepTabs current={step} onChange={setStep} />
@@ -239,21 +239,21 @@ export default function OnboardingPage() {
 
       {step === 1 ? (
         <Card>
-          <CardTitle>Dados do estudio</CardTitle>
+          <CardTitle>Dados do estúdio</CardTitle>
           <form className="mt-4 grid gap-4" onSubmit={submitProfile}>
             <div className="grid gap-4 md:grid-cols-2">
               <TextField label="Telefone" value={profile.phone} onChange={(value) => setProfile({ ...profile, phone: value })} />
               <TextField label="WhatsApp" value={profile.whatsapp} onChange={(value) => setProfile({ ...profile, whatsapp: value })} />
               <TextField label="CEP" value={profile.zipCode} onChange={(value) => setProfile({ ...profile, zipCode: value })} />
-              <TextField label="Endereco" value={profile.street} onChange={(value) => setProfile({ ...profile, street: value })} />
-              <TextField label="Numero" value={profile.number} onChange={(value) => setProfile({ ...profile, number: value })} />
+              <TextField label="Endereço" value={profile.street} onChange={(value) => setProfile({ ...profile, street: value })} />
+              <TextField label="Número" value={profile.number} onChange={(value) => setProfile({ ...profile, number: value })} />
               <TextField label="Complemento" value={profile.complement} onChange={(value) => setProfile({ ...profile, complement: value })} />
               <TextField label="Bairro" value={profile.district} onChange={(value) => setProfile({ ...profile, district: value })} />
               <TextField label="Cidade" value={profile.city} onChange={(value) => setProfile({ ...profile, city: value })} />
               <TextField label="Estado" value={profile.state} maxLength={2} onChange={(value) => setProfile({ ...profile, state: value.toUpperCase().slice(0, 2) })} />
               <TextField label="CNPJ" value={profile.cnpj} onChange={(value) => setProfile({ ...profile, cnpj: value })} />
               <label className="grid gap-2 text-sm font-medium">
-                Fuso horario
+                Fuso horário
                 <select className={selectClassName} value={profile.timezone} onChange={(event) => setProfile({ ...profile, timezone: event.target.value })}>
                   {timezones.map((timezone) => <option key={timezone} value={timezone}>{timezone}</option>)}
                 </select>
@@ -266,26 +266,26 @@ export default function OnboardingPage() {
 
       {step === 2 ? (
         <Card>
-          <CardTitle>Operacao</CardTitle>
+          <CardTitle>Operação</CardTitle>
           <p className="mt-2 text-sm text-muted">
-            Defina as regras padrao usadas na agenda, faltas justificadas e creditos de reposicao.
+            Defina as regras padrão usadas na agenda, faltas justificadas e créditos de reposição.
           </p>
           <form className="mt-4 grid gap-4" onSubmit={submitOperation}>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <NumberField label="Duracao padrao da aula" help="Tempo sugerido ao criar novos horarios, em minutos." value={operation.defaultClassDurationMinutes} min={15} onChange={(value) => setOperation({ ...operation, defaultClassDurationMinutes: value })} />
-              <NumberField label="Capacidade padrao da turma" help="Quantidade de alunos sugerida ao criar uma sala ou horario." value={operation.defaultClassCapacity} min={1} onChange={(value) => setOperation({ ...operation, defaultClassCapacity: value })} />
+              <NumberField label="Duração padrão da aula" help="Tempo sugerido ao criar novos horários, em minutos." value={operation.defaultClassDurationMinutes} min={15} onChange={(value) => setOperation({ ...operation, defaultClassDurationMinutes: value })} />
+              <NumberField label="Capacidade padrão da turma" help="Quantidade de alunos sugerida ao criar uma sala ou horário." value={operation.defaultClassCapacity} min={1} onChange={(value) => setOperation({ ...operation, defaultClassCapacity: value })} />
               <NumberField label="Antecedencia para cancelamento" help="Horas minimas antes da aula para o aluno cancelar sem atendimento manual." value={operation.cancellationNoticeHours} min={0} onChange={(value) => setOperation({ ...operation, cancellationNoticeHours: value })} />
-              <NumberField label="Faltas justificadas por periodo" help="Limite de faltas que podem gerar reposicao dentro do periodo configurado." value={operation.maxJustifiedAbsences} min={0} onChange={(value) => setOperation({ ...operation, maxJustifiedAbsences: value })} />
+              <NumberField label="Faltas justificadas por período" help="Limite de faltas que podem gerar reposição dentro do período configurado." value={operation.maxJustifiedAbsences} min={0} onChange={(value) => setOperation({ ...operation, maxJustifiedAbsences: value })} />
             </div>
             <label className="grid gap-2 text-sm font-medium">
-              Validade do credito de reposicao
+              Validade do crédito de reposição
               <select className={selectClassName} value={operation.replacementCreditValidityDays} onChange={(event) => setOperation({ ...operation, replacementCreditValidityDays: Number(event.target.value) })}>
                 {[30, 60, 90].map((days) => <option key={days} value={days}>{days} dias</option>)}
               </select>
-              <span className="text-xs font-normal text-muted">Prazo para o aluno usar a reposicao depois que o credito for criado.</span>
+              <span className="text-xs font-normal text-muted">Prazo para o aluno usar a reposição depois que o crédito for criado.</span>
             </label>
             <Toggle label="Exigir texto de justificativa" help="Quando ativo, a equipe precisa informar o motivo ao marcar falta justificada." checked={operation.requireJustificationText} onChange={(checked) => setOperation({ ...operation, requireJustificationText: checked })} />
-            <Toggle label="Consumir credito se o aluno faltar a reposicao" help="Quando ativo, uma falta na aula de reposicao usa o credito mesmo sem presenca." checked={operation.replacementNoShowConsumesCredit} onChange={(checked) => setOperation({ ...operation, replacementNoShowConsumesCredit: checked })} />
+            <Toggle label="Consumir crédito se o aluno faltar à reposição" help="Quando ativo, uma falta na aula de reposição usa o crédito mesmo sem presença." checked={operation.replacementNoShowConsumesCredit} onChange={(checked) => setOperation({ ...operation, replacementNoShowConsumesCredit: checked })} />
             <Button disabled={saving}>{saving ? 'Salvando...' : 'Salvar e continuar'}</Button>
           </form>
         </Card>
@@ -344,25 +344,25 @@ export default function OnboardingPage() {
                   Logo PNG ou WebP
                   <span className="flex min-h-11 items-center gap-3 rounded-md border border-border bg-white px-3 py-2">
                     <ImagePlus size={18} />
-                    <span className="truncate text-muted">{logoFile?.name ?? 'Selecionar arquivo ate 2 MB'}</span>
+                    <span className="truncate text-muted">{logoFile?.name ?? 'Selecionar arquivo até 2 MB'}</span>
                     <input className="sr-only" accept="image/png,image/webp" type="file" onChange={handleLogo(setLogoFile, setLogoPreview, setError)} />
                   </span>
                 </label>
               </div>
               <div className="grid content-start gap-3 rounded-md border border-border bg-background p-4">
-                <p className="text-sm font-medium">Previa</p>
+                <p className="text-sm font-medium">Prévia</p>
                 <div className="flex items-center gap-3 rounded-md bg-white p-3">
                   {activeLogo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img alt="Previa da logo" className="size-16 rounded-md object-contain" src={activeLogo} />
+                    <img alt="Prévia da logo" className="size-16 rounded-md object-contain" src={activeLogo} />
                   ) : (
                     <div className="grid size-16 place-items-center rounded-md text-lg font-bold text-white" style={{ backgroundColor: brandColor }}>
                       {studioInitials(studio?.name ?? 'PM')}
                     </div>
                   )}
                   <div>
-                    <p className="font-semibold">{studio?.name ?? 'Estudio'}</p>
-                    <p className="text-sm text-muted">Botoes, links e indicadores usam a cor escolhida.</p>
+                    <p className="font-semibold">{studio?.name ?? 'Estúdio'}</p>
+                    <p className="text-sm text-muted">Botões, links e indicadores usam a cor escolhida.</p>
                   </div>
                 </div>
                 {studio?.logo ? (
@@ -382,7 +382,7 @@ export default function OnboardingPage() {
 }
 
 function StepTabs({ current, onChange }: { current: Step; onChange: (step: Step) => void }) {
-  const steps: Array<[Step, string]> = [[1, 'Dados'], [2, 'Operacao'], [3, 'Planos'], [4, 'Visual']];
+  const steps: Array<[Step, string]> = [[1, 'Dados'], [2, 'Operação'], [3, 'Planos'], [4, 'Visual']];
   return (
     <div className="grid grid-cols-4 rounded-md border border-border bg-panel p-1">
       {steps.map(([step, label]) => (
@@ -500,7 +500,7 @@ async function invalidateStudio(queryClient: ReturnType<typeof useQueryClient>):
 async function uploadLogoContent(fileId: string, file: File): Promise<void> {
   const token = getAccessToken();
   if (!token) {
-    throw new Error('Sessao expirada ou invalida.');
+    throw new Error('Sessão expirada ou inválida.');
   }
   const response = await fetch(`${API_URL}/studios/logo/${fileId}/content`, {
     method: 'PUT',
@@ -512,7 +512,7 @@ async function uploadLogoContent(fileId: string, file: File): Promise<void> {
     body: file,
   }).catch(() => null);
   if (!response?.ok) {
-    throw new Error(response ? `Falha ao enviar logo (${response.status}).` : 'Nao foi possivel enviar a logo.');
+    throw new Error(response ? `Falha ao enviar logo (${response.status}).` : 'Não foi possível enviar a logo.');
   }
 }
 

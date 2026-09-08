@@ -19,8 +19,8 @@ export function PermissionGate({
     return (
       fallback ?? (
         <EmptyState
-          title="Voce nao tem permissao"
-          description="O acesso a esta area depende de permissao liberada pelo backend."
+          title="Você não tem permissão"
+          description="O acesso a esta área depende de permissão liberada pelo backend."
         />
       )
     );

@@ -20,7 +20,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   }, [status, router, pathname]);
 
   if (status === 'checking') {
-    return <LoadingState label="Verificando sessao..." />;
+    return <LoadingState label="Verificando sessão..." />;
   }
 
   if (status !== 'authenticated') {

@@ -35,7 +35,7 @@ function StudioSettingsPanel() {
     }
   }, [studio?.brandColor]);
 
-  if (query.isLoading) return <LoadingState label="Carregando estudio..." />;
+  if (query.isLoading) return <LoadingState label="Carregando estúdio..." />;
   if (query.isError) return <ErrorState message={query.error.message} onRetry={() => void query.refetch()} />;
 
   return (
@@ -43,8 +43,8 @@ function StudioSettingsPanel() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase text-primary">Configuracoes</p>
-          <h1 className="text-2xl font-semibold">Estudio</h1>
-          <p className="mt-1 text-sm text-muted">Dados, operacao e identidade visual do estudio autenticado.</p>
+          <h1 className="text-2xl font-semibold">Estúdio</h1>
+          <p className="mt-1 text-sm text-muted">Dados, operação e identidade visual do estúdio autenticado.</p>
         </div>
         <Link className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white" href="/onboarding">
           Abrir assistente
@@ -53,14 +53,14 @@ function StudioSettingsPanel() {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
-          <CardTitle>{studio?.name ?? 'Estudio'}</CardTitle>
+          <CardTitle>{studio?.name ?? 'Estúdio'}</CardTitle>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             <Info label="E-mail" value={studio?.email} />
-            <Info label="CPF do responsavel" value={studio?.responsibleCpf} />
+            <Info label="CPF do responsável" value={studio?.responsibleCpf} />
             <Info label="Telefone" value={studio?.phone} />
             <Info label="WhatsApp" value={studio?.whatsapp} />
             <Info label="CNPJ" value={studio?.cnpj} />
-            <Info label="Endereco" value={address(studio)} />
+            <Info label="Endereço" value={address(studio)} />
             <Info label="Fuso" value={studio?.timezone} />
           </dl>
         </Card>
@@ -82,7 +82,7 @@ function StudioSettingsPanel() {
             </div>
           </div>
           <p className="mt-4 text-sm text-muted">
-            {studio?.onboardingCompletedAt ? 'Onboarding concluido.' : 'Onboarding ainda nao concluido.'}
+            {studio?.onboardingCompletedAt ? 'Onboarding concluído.' : 'Onboarding ainda não concluído.'}
           </p>
         </Card>
       </div>

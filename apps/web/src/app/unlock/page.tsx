@@ -63,7 +63,7 @@ export default function UnlockPage() {
     <main className="grid min-h-screen place-items-center bg-background p-6">
       <section className="w-full max-w-sm rounded-lg border border-border bg-panel p-6 text-center shadow-sm">
         <p className="text-sm text-muted">
-          {device?.studio?.name ?? "Estudio conectado"}
+          {device?.studio?.name ?? "Estúdio conectado"}
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Digite seu PIN</h1>
         <div
@@ -124,7 +124,7 @@ export default function UnlockPage() {
           className="mt-6 w-full bg-white text-foreground ring-1 ring-border hover:bg-background"
           onClick={logoutStudio}
         >
-          Sair da conta do estudio
+          Sair da conta do estúdio
         </Button>
       </section>
     </main>

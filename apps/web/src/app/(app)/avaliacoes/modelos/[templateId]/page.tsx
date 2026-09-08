@@ -35,7 +35,7 @@ export default function AssessmentTemplateDetailPage() {
             <h1 className="text-2xl font-semibold">{readString(template, 'name')}</h1>
             <p className="mt-1 text-sm text-muted">{readString(template, 'description')} · {status === 'PUBLISHED' ? 'Publicado' : status === 'ARCHIVED' ? 'Arquivado' : 'Rascunho'}</p>
           </div>
-          <Link className="rounded-md border border-border px-3 py-3 text-sm font-semibold" href={`/avaliacoes/modelos/novo?templateId=${readString(template, 'id')}`}>Criar nova versao</Link>
+          <Link className="rounded-md border border-border px-3 py-3 text-sm font-semibold" href={`/avaliacoes/modelos/novo?templateId=${readString(template, 'id')}`}>Criar nova versão</Link>
         </div>
         <Card className="grid gap-3">
           <CardTitle>{fields.filter((field) => readString(field, 'type') !== 'section').length}/40 perguntas · {readString(template, 'audience') === 'PROFESSIONAL' ? 'Profissional autorizado' : 'Aluno'}</CardTitle>

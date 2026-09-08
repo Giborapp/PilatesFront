@@ -25,9 +25,9 @@ type FieldDraft = {
 const fieldTypes: Array<[FieldType, string]> = [
   ["short_text", "Texto curto"],
   ["long_text", "Texto longo"],
-  ["number", "Numero"],
+  ["number", "Número"],
   ["date", "Data"],
-  ["boolean", "Sim/Nao"],
+  ["boolean", "Sim/Não"],
   ["single_select", "Escolha unica"],
   ["multi_select", "Multipla escolha"],
   ["numeric_scale", "Escala numerica"],
@@ -106,7 +106,7 @@ export default function NewAssessmentTemplatePage() {
     }
     if (normalizedFields.some((field) => ["single_select", "multi_select"].includes(field.type) && (!field.options || field.options.length === 0))) {
       setLoading(false);
-      setError("Perguntas de escolha precisam ter pelo menos uma opcao.");
+      setError("Perguntas de escolha precisam ter pelo menos uma opção.");
       return;
     }
 
@@ -125,8 +125,8 @@ export default function NewAssessmentTemplatePage() {
   return (
     <section className="grid max-w-4xl gap-4">
       <div>
-        <h1 className="text-2xl font-semibold">Novo formulario</h1>
-        <p className="text-sm text-muted">Crie avaliacoes e anamneses para aplicar nos alunos.</p>
+        <h1 className="text-2xl font-semibold">Novo formulário</h1>
+        <p className="text-sm text-muted">Crie avaliações e anamneses para aplicar nos alunos.</p>
       </div>
       <form className="grid gap-4" onSubmit={handleSubmit}>
         <Card className="grid gap-4">
@@ -212,7 +212,7 @@ export default function NewAssessmentTemplatePage() {
           <Button type="button" className="bg-white text-foreground ring-1 ring-border hover:bg-background" onClick={() => setFields((current) => [...current, newField()])}>
             Adicionar pergunta
           </Button>
-          <Button disabled={loading}>{loading ? "Salvando..." : "Salvar formulario"}</Button>
+          <Button disabled={loading}>{loading ? "Salvando..." : "Salvar formulário"}</Button>
         </div>
       </form>
     </section>

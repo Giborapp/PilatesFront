@@ -33,8 +33,8 @@ export default function AssessmentTemplatesPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase text-primary">Formularios</p>
-            <h1 className="text-2xl font-semibold">Modelos de anamnese e avaliacao</h1>
-            <p className="mt-1 text-sm text-muted">{publishedCount} de 3 vagas publicadas usadas. Rascunhos nao ocupam vaga.</p>
+            <h1 className="text-2xl font-semibold">Modelos de anamnese e avaliação</h1>
+            <p className="mt-1 text-sm text-muted">{publishedCount} de 3 vagas publicadas usadas. Rascunhos não ocupam vaga.</p>
           </div>
           <Link className="rounded-md bg-primary px-4 py-3 text-sm font-semibold text-white" href="/avaliacoes/modelos/novo">Novo modelo</Link>
         </div>

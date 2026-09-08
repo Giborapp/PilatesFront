@@ -100,15 +100,15 @@ export default function DashboardPage() {
       {!query.isLoading && !query.isError ? (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <ActionMetricCard href="/agenda" label="Aulas de hoje" value={readNumber(counts, "classesToday", classes.length)} />
-          <ActionMetricCard href="/agenda" label="Presencas pendentes" value={readNumber(counts, "pendingAttendances")} />
+          <ActionMetricCard href="/agenda" label="Presenças pendentes" value={readNumber(counts, "pendingAttendances")} />
           <ActionMetricCard href="/financeiro" label="Pagamentos vencidos" value={readNumber(counts, "overduePayments", overduePayments.length)} tone={readNumber(counts, "overduePayments", overduePayments.length) > 0 ? "danger" : "default"} />
-          <ActionMetricCard href="/financeiro" label="Pagamentos proximos" value={readNumber(counts, "duePayments", duePayments.length)} />
+          <ActionMetricCard href="/financeiro" label="Pagamentos próximos" value={readNumber(counts, "duePayments", duePayments.length)} />
           <ActionMetricCard href="/cadastros-recebidos" label="Cadastros aguardando" value={readNumber(counts, "pendingIntakes", pendingIntakes.length)} tone={readNumber(counts, "pendingIntakes", pendingIntakes.length) > 0 ? "warning" : "default"} />
-          <ActionMetricCard href="/avaliacoes" label="Avaliacoes pendentes" value={readNumber(counts, "pendingAssessments")} />
-          <ActionMetricCard href="/reposicoes" label="Reposicoes disponiveis" value={readNumber(counts, "availableCredits")} />
-          <ActionMetricCard href="/reposicoes?expiring=30" label="Reposicoes em 30 dias" value={readNumber(counts, "expiringCredits30")} tone="warning" />
-          <ActionMetricCard href="/reposicoes?expiring=7" label="Reposicoes em 7 dias" value={readNumber(counts, "expiringCredits7")} tone="warning" />
-          <ActionMetricCard href="/agenda?nearCapacity=true" label="Horarios proximos da capacidade" value={readNumber(counts, "nearCapacity")} />
+          <ActionMetricCard href="/avaliacoes" label="Avaliações pendentes" value={readNumber(counts, "pendingAssessments")} />
+          <ActionMetricCard href="/reposicoes" label="Reposições disponiveis" value={readNumber(counts, "availableCredits")} />
+          <ActionMetricCard href="/reposicoes?expiring=30" label="Reposições em 30 dias" value={readNumber(counts, "expiringCredits30")} tone="warning" />
+          <ActionMetricCard href="/reposicoes?expiring=7" label="Reposições em 7 dias" value={readNumber(counts, "expiringCredits7")} tone="warning" />
+          <ActionMetricCard href="/agenda?nearCapacity=true" label="Horários próximos da capacidade" value={readNumber(counts, "nearCapacity")} />
         </div>
       ) : null}
 
@@ -147,16 +147,16 @@ export default function DashboardPage() {
 
       {!query.isLoading && !query.isError ? (
         <div className="grid gap-4 xl:grid-cols-3">
-          <DashboardList title="Financeiro vencido" empty="Nenhuma cobranca vencida." records={overduePayments}>
+          <DashboardList title="Financeiro vencido" empty="Nenhuma cobrança vencida." records={overduePayments}>
             {(payment) => <PaymentAlert payment={payment} />}
           </DashboardList>
-          <DashboardList title="Vencimentos proximos" empty="Nenhuma cobranca vence nos proximos dias." records={duePayments}>
+          <DashboardList title="Vencimentos próximos" empty="Nenhuma cobrança vence nos próximos dias." records={duePayments}>
             {(payment) => <PaymentAlert payment={payment} />}
           </DashboardList>
           <DashboardList title="Acompanhar hoje" empty="Sem experimentais ou reposicoes urgentes." records={[...trialProcesses, ...expiringCredits]}>
             {(record) => isRecord(record.student) ? <StudentAlert record={record} /> : <GenericAlert record={record} />}
           </DashboardList>
-          <DashboardList title="Cadastros aguardando" empty="Nenhum cadastro aguardando revisao." records={pendingIntakes}>
+          <DashboardList title="Cadastros aguardando" empty="Nenhum cadastro aguardando revisão." records={pendingIntakes}>
             {() => <Link className="font-semibold text-primary" href="/cadastros-recebidos">Abrir cadastros recebidos</Link>}
           </DashboardList>
         </div>
@@ -298,7 +298,7 @@ function StudentAttendanceRow({ booking }: { booking: UnknownRecord }) {
         <p className="font-semibold">{studentName(student)}</p>
         <p className="text-sm text-muted">
           Restam {readNumber(student, "monthlyLessonsRemaining")} de{" "}
-          {readNumber(student, "monthlyLessonLimit")} aulas no mes
+          {readNumber(student, "monthlyLessonLimit")} aulas no mês
         </p>
         {status ? <StatusBadge value={status} /> : null}
       </div>
@@ -328,7 +328,7 @@ function CancelledBookingCard({
           </p>
           <p className="mt-1 text-sm text-muted">
             Restam {readNumber(student, "monthlyLessonsRemaining")} de{" "}
-            {readNumber(student, "monthlyLessonLimit")} aulas no mes
+            {readNumber(student, "monthlyLessonLimit")} aulas no mês
           </p>
         </div>
         <StatusBadge value={attendanceStatus(booking)} />

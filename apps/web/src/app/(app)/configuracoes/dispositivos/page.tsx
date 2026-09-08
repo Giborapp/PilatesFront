@@ -6,7 +6,7 @@ export default function DevicesSettingsPage() {
     <PermissionGate permission="devices.manage">
       <RecordList
         title="Dispositivos"
-        description="Dispositivos conectados ao estudio."
+        description="Dispositivos conectados ao estúdio."
         endpoint="/devices"
         queryKey="devices"
         fields={[

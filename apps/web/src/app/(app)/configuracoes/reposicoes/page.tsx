@@ -6,14 +6,14 @@ export default function ReplacementSettingsPage() {
     <PermissionGate permission="studio_settings.manage">
       <RecordList
         title="Cancelamentos e reposicoes"
-        description="Configuracoes de faltas, creditos, capacidade e lista de espera."
+        description="Configurações de faltas, créditos, capacidade e lista de espera."
         endpoint="/studio-settings"
         queryKey="studio-settings"
         fields={[
           { key: 'cancellationNoticeHours', label: 'Antecedencia minima' },
           { key: 'maxJustifiedAbsences', label: 'Maximo de faltas' },
           { key: 'justifiedAbsencePeriod', label: 'Periodo' },
-          { key: 'replacementCreditValidityDays', label: 'Validade do credito' },
+          { key: 'replacementCreditValidityDays', label: 'Validade do crédito' },
           { key: 'allowOverbooking', label: 'Overbooking' },
           { key: 'trialClassOccupiesCapacity', label: 'Experimental ocupa vaga' },
         ]}

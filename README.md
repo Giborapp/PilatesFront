@@ -47,7 +47,7 @@ NEXT_PUBLIC_API_URL=https://pilates-manager-api.onrender.com
 - PostgreSQL local, quando usado: `5432`
 - Backend de producao: `https://pilates-manager-api.onrender.com`
 
-Nao use `5432` para o frontend ou para a API HTTP, porque essa porta e a porta padrao do PostgreSQL.
+Não use `5432` para o frontend ou para a API HTTP, porque essa porta é a porta padrão do PostgreSQL.
 
 ## Deploy no Render
 
@@ -74,20 +74,20 @@ CORS_ORIGINS=https://sua-url-do-front.onrender.com
 ## Implementado
 
 - Next.js App Router em `apps/web`.
-- PWA com manifest, icone e service worker que nao faz cache de dados sensiveis.
+- PWA com manifest, ícone e service worker que não faz cache de dados sensíveis.
 - Cliente de API centralizado com cookies, bearer token em memoria, refresh e tratamento 401/403.
 - Tipos gerados do OpenAPI em `apps/web/src/lib/openapi.ts`.
-- Fluxo `/login` com entrada e criacao de conta, seguido de `/unlock`.
-- Cadastro inicial minimo e assistente `/onboarding` retomavel para dados do
-  estudio, operacao, planos iniciais, cor e logo privada.
+- Fluxo `/login` com entrada e criação de conta, seguido de `/unlock`.
+- Cadastro inicial mínimo e assistente `/onboarding` retomavel para dados do
+  estúdio, operação, planos iniciais, cor e logo privada.
 - Guard de rotas protegidas, `PermissionGate` e navegacao responsiva.
-- Home operacional com aulas do dia, alunos, saldo mensal, presenca, falta e aba de cancelados.
-- Agenda com criacao de horarios de aula e inclusao de alunos salvos.
-- Dashboard, agenda, aula, alunos, experimentais, reposicoes, financeiro, planos, equipe, configuracoes, avaliacoes e auditoria usando endpoints reais existentes.
+- Home operacional com aulas do dia, alunos, saldo mensal, presença, falta e aba de cancelados.
+- Agenda com criação de horários de aula e inclusao de alunos salvos.
+- Dashboard, agenda, aula, alunos, experimentais, reposições, financeiro, planos, equipe, configurações, avaliações e auditoria usando endpoints reais existentes.
 
 ## Lacunas conhecidas
 
-- O OpenAPI atual do backend nao descreve schemas de resposta em muitos endpoints.
-- Upload binario de arquivos ainda nao esta completo no backend.
-- Relatorios dedicados ainda nao existem no backend.
-- Algumas telas administrativas ainda priorizam listagem e precisam evoluir para fluxos completos de acao.
+- O OpenAPI atual do backend não descreve schemas de resposta em muitos endpoints.
+- Upload binário de arquivos ainda não está completo no backend.
+- Relatórios dedicados ainda não existem no backend.
+- Algumas telas administrativas ainda priorizam listagem e precisam evoluir para fluxos completos de ação.

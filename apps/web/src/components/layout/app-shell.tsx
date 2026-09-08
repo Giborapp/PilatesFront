@@ -36,12 +36,12 @@ const navItems: NavItem[] = [
   { href: '/agenda', label: 'Agenda', permission: 'classes.read_own', icon: <CalendarDays size={18} /> },
   { href: '/alunos', label: 'Alunos', permission: 'students.read', icon: <Users size={18} /> },
   { href: '/cadastros-recebidos', label: 'Cadastros recebidos', permission: 'assessments.read', icon: <UserPlus size={18} /> },
-  { href: '/cadastros-recebidos/novo', label: 'Novo link publico', permission: 'assessment_templates.manage', icon: <UserPlus size={18} /> },
+  { href: '/cadastros-recebidos/novo', label: 'Novo link público', permission: 'assessment_templates.manage', icon: <UserPlus size={18} /> },
   { href: '/experimentais', label: 'Experimentais', permission: 'trial_students.manage', icon: <Activity size={18} /> },
-  { href: '/reposicoes', label: 'Reposicoes', permission: 'attendance.read', icon: <ClipboardList size={18} /> },
+  { href: '/reposicoes', label: 'Reposições', permission: 'attendance.read', icon: <ClipboardList size={18} /> },
   { href: '/financeiro', label: 'Financeiro', permission: 'payments.read', icon: <CreditCard size={18} /> },
   { href: '/equipe', label: 'Equipe', permission: 'staff.manage', icon: <ShieldCheck size={18} /> },
-  { href: '/configuracoes', label: 'Gestao', permission: 'assessments.read', icon: <Settings size={18} /> },
+  { href: '/configuracoes', label: 'Gestão', permission: 'assessments.read', icon: <Settings size={18} /> },
   { href: '/configuracoes/assinatura', label: 'Assinatura', permission: 'studio_settings.manage', icon: <CreditCard size={18} /> },
 ];
 

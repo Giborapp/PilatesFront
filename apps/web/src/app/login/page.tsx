@@ -124,7 +124,7 @@ export default function LoginPage() {
           Pilates Manager
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
-          {mode === "login" ? "Entrar no estudio" : "Criar conta do estudio"}
+          {mode === "login" ? "Entrar no estúdio" : "Criar conta do estúdio"}
         </h1>
 
         <div className="mt-5 grid grid-cols-2 rounded-md border border-border bg-background p-1">
@@ -155,7 +155,7 @@ export default function LoginPage() {
         {mode === "login" ? (
           <form className="mt-6 grid gap-4" onSubmit={handleLogin}>
             <label className="grid gap-2 text-sm font-medium">
-              E-mail do estudio
+              E-mail do estúdio
               <Input
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -195,7 +195,7 @@ export default function LoginPage() {
         ) : (
           <form className="mt-6 grid gap-4" onSubmit={handleRegister}>
             <label className="grid gap-2 text-sm font-medium">
-              Nome do estudio
+              Nome do estúdio
               <Input
                 value={studioName}
                 onChange={(event) => setStudioName(event.target.value)}
@@ -203,7 +203,7 @@ export default function LoginPage() {
               />
             </label>
             <label className="grid gap-2 text-sm font-medium">
-              E-mail do estudio
+              E-mail do estúdio
               <Input
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -234,10 +234,10 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </span>
-              <span className="text-xs text-muted">Minimo de 6 caracteres, com uma letra maiuscula e um caractere especial.</span>
+              <span className="text-xs text-muted">Mínimo de 6 caracteres, com uma letra maiúscula e um caractere especial.</span>
             </label>
             <label className="grid gap-2 text-sm font-medium">
-              CPF do responsavel
+              CPF do responsável
               <Input
                 value={responsibleCpf}
                 onChange={(event) => setResponsibleCpf(formatCpf(event.target.value))}
@@ -275,10 +275,10 @@ export default function LoginPage() {
             <label className="grid gap-2 text-sm font-medium">
               Plano mensal (simulacao)
               <select className="min-h-11 rounded-md border border-border bg-white px-3" value={subscriptionPlan} onChange={(event) => setSubscriptionPlan(event.target.value)}>
-                <option value="STARTER">Essencial - R$ 99/mes</option>
-                <option value="PROFESSIONAL">Profissional - R$ 179/mes</option>
+                <option value="STARTER">Essencial - R$ 99/mês</option>
+                <option value="PROFESSIONAL">Profissional - R$ 179/mês</option>
               </select>
-              <span className="text-xs text-muted">Nenhuma cobranca real e feita nesta versao.</span>
+              <span className="text-xs text-muted">Nenhuma cobrança real é feita nesta versão.</span>
             </label>
             {error ? (
               <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">

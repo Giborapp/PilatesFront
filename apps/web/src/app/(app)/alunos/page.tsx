@@ -8,7 +8,7 @@ export default function StudentsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Alunos</h1>
           <p className="text-sm text-muted">
-            Lista de alunos filtrada pelo estudio autenticado.
+            Lista de alunos filtrada pelo estúdio autenticado.
           </p>
         </div>
         <Link
@@ -28,7 +28,7 @@ export default function StudentsPage() {
           { key: "preferredName", label: "Nome de uso" },
           { key: "phone", label: "Telefone" },
           { key: "email", label: "E-mail" },
-          { key: "monthlyLessonLimit", label: "Aulas/mes" },
+          { key: "monthlyLessonLimit", label: "Aulas/mês" },
           { key: "monthlyLessonsRemaining", label: "Restantes" },
           { key: "status", label: "Status", kind: "status" },
           { key: "createdAt", label: "Cadastro", kind: "date" },

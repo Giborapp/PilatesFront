@@ -76,7 +76,7 @@ export async function apiRequest<T>(
     timeout.clear();
     return {
       ok: false,
-      error: { status: 0, message: 'Nao foi possivel conectar com o backend.' },
+      error: { status: 0, message: 'Não foi possível conectar com o backend.' },
     };
   }
 }
@@ -140,12 +140,12 @@ function getErrorMessage(data: unknown, status: number): string {
     return String(message);
   }
   if (status === 403) {
-    return 'Voce nao tem permissao para esta acao.';
+    return 'Você não tem permissão para esta ação.';
   }
   if (status === 401) {
-    return 'Sessao expirada ou invalida.';
+    return 'Sessão expirada ou inválida.';
   }
-  return 'Erro ao processar a solicitacao.';
+  return 'Erro ao processar a solicitação.';
 }
 
 function createTimeoutSignal(signal?: AbortSignal | null): {

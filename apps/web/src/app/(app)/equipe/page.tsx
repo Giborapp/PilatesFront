@@ -12,7 +12,7 @@ import { StatusBadge } from "@/components/domain/badges";
 
 const roles = [
   ["PROFESSIONAL", "Profissional"],
-  ["RECEPTION", "Recepcao"],
+  ["RECEPTION", "Recepção"],
   ["FINANCE", "Financeiro"],
   ["ADMIN", "Admin"],
 ] as const;

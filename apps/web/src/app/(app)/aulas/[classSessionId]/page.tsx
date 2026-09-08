@@ -29,8 +29,8 @@ export default function ClassSessionPage() {
   if (!session) {
     return (
       <EmptyState
-        title="Aula nao encontrada"
-        description="Verifique se a aula ainda existe ou se voce tem permissao para acessa-la."
+        title="Aula não encontrada"
+        description="Verifique se a aula ainda existe ou se você tem permissão para acessá-la."
       />
     );
   }
@@ -44,7 +44,7 @@ export default function ClassSessionPage() {
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <CardTitle>{formatDateTime(session.startsAt)} ate {formatDateTime(session.endsAt)}</CardTitle>
+            <CardTitle>{formatDateTime(session.startsAt)} até {formatDateTime(session.endsAt)}</CardTitle>
             <p className="mt-1 text-sm text-muted">Capacidade: {String(session.capacity ?? '-')}</p>
           </div>
           <StatusBadge value={session.status} />

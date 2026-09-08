@@ -118,7 +118,7 @@ export default function StudentProfilePage() {
       </Card>
 
       <nav aria-label="Seções do perfil" className="flex gap-2 overflow-x-auto border-b border-border pb-2">
-        {[['summary', 'Resumo'], ['schedule', 'Horarios e presenca'], ['finance', 'Plano e financeiro'], ['clinical', 'Anamneses e avaliacoes'], ['replacement', 'Reposicoes'], ['history', 'Historico']].map(([value, label]) => <button className={activeSection === value ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white" : "rounded-md px-3 py-2 text-sm font-semibold text-muted hover:bg-background"} key={value} onClick={() => setActiveSection(value)} type="button" aria-current={activeSection === value ? "page" : undefined}>{label}</button>)}
+        {[['summary', 'Resumo'], ['schedule', 'Horários e presença'], ['finance', 'Plano e financeiro'], ['clinical', 'Anamneses e avaliações'], ['replacement', 'Reposições'], ['history', 'Histórico']].map(([value, label]) => <button className={activeSection === value ? "rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white" : "rounded-md px-3 py-2 text-sm font-semibold text-muted hover:bg-background"} key={value} onClick={() => setActiveSection(value)} type="button" aria-current={activeSection === value ? "page" : undefined}>{label}</button>)}
       </nav>
 
       {activeSection === "summary" ? <div className="grid gap-4 lg:grid-cols-2">
@@ -132,34 +132,34 @@ export default function StudentProfilePage() {
           </dl>
         </Card>
         <Card>
-          <CardTitle>Cuidados e observacoes</CardTitle>
+          <CardTitle>Cuidados e observações</CardTitle>
           <p className="mt-3 text-sm text-muted">{readString(student, "importantCareNotes") || "Nenhum cuidado importante registrado."}</p>
-          <p className="mt-3 text-sm text-muted">{readString(student, "generalNotes") || "Sem observacoes gerais."}</p>
+          <p className="mt-3 text-sm text-muted">{readString(student, "generalNotes") || "Sem observações gerais."}</p>
         </Card>
       </div> : null}
 
-      {activeSection === "schedule" ? <Card id="horarios-presenca" className="grid gap-4"><CardTitle>Horarios e presenca</CardTitle>{schedulesQuery.isLoading ? <LoadingState /> : null}{schedulesQuery.data?.map((schedule) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(schedule, "id")}><p className="font-semibold">{readString(schedule, "weekday")} · {readString(schedule, "startTime")}</p><p className="text-muted">{readString(asRecord(schedule.professional), "name")} · {readString(schedule, "durationMinutes")} minutos</p><Link className="text-primary" href="/agenda">Abrir na agenda</Link></div>)}{!schedulesQuery.isLoading && schedulesQuery.data?.length === 0 ? <EmptyState title="Sem horarios" description="Nenhum horario recorrente vinculado." /> : null}<p className="text-sm text-muted">O historico detalhado de presencas permanece disponivel na agenda e nas aulas relacionadas.</p></Card> : null}
-      {activeSection === "finance" ? <Card id="plano-financeiro" className="grid gap-4"><CardTitle>Plano e financeiro</CardTitle><p className="text-sm">Frequencia semanal: <strong>{readNumber(asRecord(student.plans?.[0]), "sessionsPerWeek") || "-"}</strong></p><p className="text-sm">Pagamentos vencidos ou proximos: <strong>{paymentsQuery.data?.filter((payment) => ["OVERDUE", "PENDING"].includes(readString(payment, "effectiveStatus") || readString(payment, "status"))).length ?? 0}</strong></p>{paymentsQuery.data?.map((payment) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(payment, "id")}><span>{readString(payment, "status")} · vencimento {new Date(readString(payment, "dueDate")).toLocaleDateString("pt-BR")}</span></div>)}</Card> : null}
+      {activeSection === "schedule" ? <Card id="horarios-presenca" className="grid gap-4"><CardTitle>Horários e presença</CardTitle>{schedulesQuery.isLoading ? <LoadingState /> : null}{schedulesQuery.data?.map((schedule) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(schedule, "id")}><p className="font-semibold">{readString(schedule, "weekday")} · {readString(schedule, "startTime")}</p><p className="text-muted">{readString(asRecord(schedule.professional), "name")} · {readString(schedule, "durationMinutes")} minutos</p><Link className="text-primary" href="/agenda">Abrir na agenda</Link></div>)}{!schedulesQuery.isLoading && schedulesQuery.data?.length === 0 ? <EmptyState title="Sem horários" description="Nenhum horário recorrente vinculado." /> : null}<p className="text-sm text-muted">O histórico detalhado de presenças permanece disponível na agenda e nas aulas relacionadas.</p></Card> : null}
+      {activeSection === "finance" ? <Card id="plano-financeiro" className="grid gap-4"><CardTitle>Plano e financeiro</CardTitle><p className="text-sm">Frequência semanal: <strong>{readNumber(asRecord(student.plans?.[0]), "sessionsPerWeek") || "-"}</strong></p><p className="text-sm">Pagamentos vencidos ou próximos: <strong>{paymentsQuery.data?.filter((payment) => ["OVERDUE", "PENDING"].includes(readString(payment, "effectiveStatus") || readString(payment, "status"))).length ?? 0}</strong></p>{paymentsQuery.data?.map((payment) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(payment, "id")}><span>{readString(payment, "status")} · vencimento {new Date(readString(payment, "dueDate")).toLocaleDateString("pt-BR")}</span></div>)}</Card> : null}
       {activeSection === "clinical" && clinicalAllowed ? <div id="anamneses-avaliacoes">{ /* The existing clinical editor follows below. */ }</div> : null}
       {activeSection === "clinical" && !clinicalAllowed ? <EmptyState title="Acesso restrito" description="Somente profissionais autorizados podem visualizar respostas clínicas." /> : null}
-      {activeSection === "replacement" ? <Card id="reposicoes" className="grid gap-4"><CardTitle>Reposicoes</CardTitle><p className="text-sm">{creditsQuery.data?.filter((credit) => readString(credit, "status") === "AVAILABLE").length ?? 0} aula(s) para repor</p>{creditsQuery.data?.map((credit) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(credit, "id")}><p className="font-semibold">{readString(credit, "status")}</p><p className="text-muted">Validade: {new Date(readString(credit, "expiresAt")).toLocaleDateString("pt-BR")}</p><div className="mt-2 flex gap-2"><Link className="text-primary" href="/reposicoes">Agendar reposicao</Link>{readString(credit, "status") === "AVAILABLE" && staff?.permissions.includes("attendance.manage") ? <Link className="text-primary" href="/reposicoes">Gerar link</Link> : null}</div></div>)}</Card> : null}
-      {activeSection === "history" ? <Card id="historico" className="grid gap-4"><CardTitle>Historico operacional</CardTitle><p className="text-sm text-muted">Criado em {new Date(readString(student, "createdAt")).toLocaleDateString("pt-BR")} · atualizado em {new Date(readString(student, "updatedAt")).toLocaleDateString("pt-BR")}</p><p className="text-sm text-muted">Eventos clinicos e respostas nao sao exibidos nesta area.</p></Card> : null}
+      {activeSection === "replacement" ? <Card id="reposicoes" className="grid gap-4"><CardTitle>Reposições</CardTitle><p className="text-sm">{creditsQuery.data?.filter((credit) => readString(credit, "status") === "AVAILABLE").length ?? 0} aula(s) para repor</p>{creditsQuery.data?.map((credit) => <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(credit, "id")}><p className="font-semibold">{readString(credit, "status")}</p><p className="text-muted">Validade: {new Date(readString(credit, "expiresAt")).toLocaleDateString("pt-BR")}</p><div className="mt-2 flex gap-2"><Link className="text-primary" href="/reposicoes">Agendar reposição</Link>{readString(credit, "status") === "AVAILABLE" && staff?.permissions.includes("attendance.manage") ? <Link className="text-primary" href="/reposicoes">Gerar link</Link> : null}</div></div>)}</Card> : null}
+      {activeSection === "history" ? <Card id="historico" className="grid gap-4"><CardTitle>Histórico operacional</CardTitle><p className="text-sm text-muted">Criado em {new Date(readString(student, "createdAt")).toLocaleDateString("pt-BR")} · atualizado em {new Date(readString(student, "updatedAt")).toLocaleDateString("pt-BR")}</p><p className="text-sm text-muted">Eventos clínicos e respostas não são exibidos nesta área.</p></Card> : null}
 
       {activeSection === "clinical" && clinicalAllowed ? <Card className="grid gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <CardTitle>Realizar avaliacao</CardTitle>
-            <p className="text-sm text-muted">Selecione um formulario criado na Gestao e preencha para este aluno.</p>
+            <CardTitle>Realizar avaliação</CardTitle>
+            <p className="text-sm text-muted">Selecione um formulário criado na Gestão e preencha para este aluno.</p>
           </div>
         </div>
         {templatesQuery.isLoading ? <LoadingState /> : null}
         {templates.length === 0 && !templatesQuery.isLoading ? (
-          <EmptyState title="Sem formularios" description="Crie uma avaliacao ou anamnese em Gestao antes de avaliar o aluno." />
+          <EmptyState title="Sem formulários" description="Crie uma avaliação ou anamnese em Gestão antes de avaliar o aluno." />
         ) : null}
         {templates.length > 0 ? (
           <form className="grid gap-4" onSubmit={(event) => submitAssessment(event, createAssessment.mutate)}>
             <label className="grid gap-2 text-sm font-medium">
-              Formulario
+              Formulário
               <select
                 className={selectClassName}
                 value={selectedTemplateId}
@@ -187,16 +187,16 @@ export default function StudentProfilePage() {
             ))}
             {createAssessment.isError ? <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">{createAssessment.error.message}</p> : null}
             <Button disabled={createAssessment.isPending || !selectedTemplateId}>
-              {createAssessment.isPending ? "Salvando..." : "Salvar avaliacao"}
+              {createAssessment.isPending ? "Salvando..." : "Salvar avaliação"}
             </Button>
           </form>
         ) : null}
       </Card> : null}
 
       {activeSection === "clinical" && clinicalAllowed ? <Card className="grid gap-4">
-        <CardTitle>Avaliacoes anteriores</CardTitle>
+        <CardTitle>Avaliações anteriores</CardTitle>
         {assessmentsQuery.isLoading ? <LoadingState /> : null}
-        {assessments.length === 0 && !assessmentsQuery.isLoading ? <EmptyState title="Sem avaliacoes" description="Nenhuma avaliacao registrada para este aluno." /> : null}
+        {assessments.length === 0 && !assessmentsQuery.isLoading ? <EmptyState title="Sem avaliações" description="Nenhuma avaliação registrada para este aluno." /> : null}
         <div className="grid gap-2">
           {assessments.map((assessment) => (
             <div className="rounded-md border border-border bg-background p-3 text-sm" key={readString(assessment, "id")}>
@@ -208,7 +208,7 @@ export default function StudentProfilePage() {
       </Card> : null}
 
       {activeSection === "clinical" && clinicalAllowed ? <Card className="grid gap-4">
-        <CardTitle>Comparar avaliacoes</CardTitle>
+        <CardTitle>Comparar avaliações</CardTitle>
         <div className="grid gap-3 md:grid-cols-2">
           <AssessmentSelect label="Avaliacao base" value={compareA} onChange={setCompareA} assessments={assessments} fallbackLabel="Ultima concluida" />
           <AssessmentSelect label="Comparar com" value={compareB} onChange={setCompareB} assessments={assessments} />
@@ -225,7 +225,7 @@ export default function StudentProfilePage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted">Selecione duas avaliacoes para comparar respostas iguais e diferentes.</p>
+          <p className="text-sm text-muted">Selecione duas avaliações para comparar respostas iguais e diferentes.</p>
         )}
       </Card> : null}
     </section>
@@ -370,7 +370,7 @@ function compareAssessments(before: UnknownRecord, after: UnknownRecord) {
 
 function stringifyAnswer(value: unknown): string {
   if (Array.isArray(value)) return value.map(String).join(", ") || "-";
-  if (typeof value === "boolean") return value ? "Sim" : "Nao";
+  if (typeof value === "boolean") return value ? "Sim" : "Não";
   if (value === undefined || value === null || value === "") return "-";
   return String(value);
 }
