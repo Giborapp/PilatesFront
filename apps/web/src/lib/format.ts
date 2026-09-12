@@ -27,3 +27,23 @@ export function formatMoney(value: unknown): string {
     currency: 'BRL',
   }).format(number);
 }
+
+export function digitsOnly(value: string): string {
+  return value.replace(/\D/g, '');
+}
+
+export function currencyInputToDecimal(value: string): string {
+  const digits = digitsOnly(value);
+  if (!digits) {
+    return '';
+  }
+  const padded = digits.padStart(3, '0');
+  const cents = padded.slice(-2);
+  const reais = padded.slice(0, -2).replace(/^0+(?=\d)/, '') || '0';
+  return `${reais}.${cents}`;
+}
+
+export function formatCurrencyInput(value: string): string {
+  const decimal = currencyInputToDecimal(value);
+  return decimal ? formatMoney(decimal) : '';
+}

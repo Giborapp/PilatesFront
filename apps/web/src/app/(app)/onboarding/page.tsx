@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ImagePlus, Trash2 } from 'lucide-react';
 import { API_URL, apiRequest, getAccessToken, isRecord, readString } from '@/lib/api';
@@ -16,6 +16,7 @@ import { Card, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ErrorState, LoadingState } from '@/components/ui/state';
 import { cn } from '@/lib/utils';
+import { currencyInputToDecimal, formatCurrencyInput } from '@/lib/format';
 
 type Step = 1 | 2 | 3 | 4;
 type PlanDraft = {
@@ -220,7 +221,7 @@ export default function OnboardingPage() {
     await invalidateStudio(queryClient);
   }
 
-  if (query.isLoading) return <LoadingState label="Carregando configuracao..." />;
+  if (query.isLoading) return <LoadingState label="Carregando configuração..." />;
   if (query.isError) return <ErrorState message={query.error.message} onRetry={() => void query.refetch()} />;
 
   return (
@@ -274,7 +275,7 @@ export default function OnboardingPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <NumberField label="Duração padrão da aula" help="Tempo sugerido ao criar novos horários, em minutos." value={operation.defaultClassDurationMinutes} min={15} onChange={(value) => setOperation({ ...operation, defaultClassDurationMinutes: value })} />
               <NumberField label="Capacidade padrão da turma" help="Quantidade de alunos sugerida ao criar uma sala ou horário." value={operation.defaultClassCapacity} min={1} onChange={(value) => setOperation({ ...operation, defaultClassCapacity: value })} />
-              <NumberField label="Antecedencia para cancelamento" help="Horas minimas antes da aula para o aluno cancelar sem atendimento manual." value={operation.cancellationNoticeHours} min={0} onChange={(value) => setOperation({ ...operation, cancellationNoticeHours: value })} />
+              <NumberField label="Antecedência para cancelamento" help="Horas mínimas antes da aula para o aluno cancelar sem atendimento manual." value={operation.cancellationNoticeHours} min={0} onChange={(value) => setOperation({ ...operation, cancellationNoticeHours: value })} />
               <NumberField label="Faltas justificadas por período" help="Limite de faltas que podem gerar reposição dentro do período configurado." value={operation.maxJustifiedAbsences} min={0} onChange={(value) => setOperation({ ...operation, maxJustifiedAbsences: value })} />
             </div>
             <label className="grid gap-2 text-sm font-medium">
@@ -299,7 +300,7 @@ export default function OnboardingPage() {
               <div className="grid gap-3 rounded-md border border-border bg-background p-3 md:grid-cols-[1fr_140px_140px_140px_auto]" key={plan.id}>
                 <TextField label="Nome" value={plan.name} onChange={(value) => setPlans(updatePlan(plans, plan.id, { name: value }))} />
                 <NumberField label="Aulas/semana" value={plan.sessionsPerWeek} min={1} onChange={(value) => setPlans(updatePlan(plans, plan.id, { sessionsPerWeek: value }))} />
-                <TextField label="Valor" value={plan.defaultAmount} inputMode="decimal" onChange={(value) => setPlans(updatePlan(plans, plan.id, { defaultAmount: value.replace(',', '.') }))} />
+                <MoneyField label="Valor" value={plan.defaultAmount} onChange={(value) => setPlans(updatePlan(plans, plan.id, { defaultAmount: value }))} />
                 <TextField label="Vencimento" value={plan.defaultBillingDay} inputMode="numeric" onChange={(value) => setPlans(updatePlan(plans, plan.id, { defaultBillingDay: value.replace(/\D/g, '').slice(0, 2) }))} />
                 <button className="self-end rounded-md border border-border p-3 text-danger" type="button" onClick={() => setPlans(plans.filter((item) => item.id !== plan.id))} aria-label="Remover plano">
                   <Trash2 size={18} />
@@ -373,7 +374,7 @@ export default function OnboardingPage() {
                 ) : null}
               </div>
             </div>
-            <Button disabled={saving}>{saving ? 'Salvando...' : 'Concluir configuracao'}</Button>
+            <Button disabled={saving}>{saving ? 'Salvando...' : 'Concluir configuração'}</Button>
           </form>
         </Card>
       ) : null}
@@ -415,6 +416,21 @@ function TextField({
   );
 }
 
+function MoneyField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <Input
+        inputMode="numeric"
+        placeholder="R$ 0,00"
+        value={formatCurrencyInput(value)}
+        onKeyDown={onlyCurrencyDigits}
+        onChange={(event) => onChange(currencyInputToDecimal(event.target.value))}
+      />
+    </label>
+  );
+}
+
 function NumberField({ label, help, value, min, onChange }: { label: string; help?: string; value: number; min: number; onChange: (value: number) => void }) {
   return (
     <label className="grid gap-2 text-sm font-medium">
@@ -423,6 +439,12 @@ function NumberField({ label, help, value, min, onChange }: { label: string; hel
       {help ? <span className="text-xs font-normal text-muted">{help}</span> : null}
     </label>
   );
+}
+
+function onlyCurrencyDigits(event: KeyboardEvent<HTMLInputElement>): void {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.key.length > 1) return;
+  if (!/\d/.test(event.key)) event.preventDefault();
 }
 
 function Toggle({ label, help, checked, onChange }: { label: string; help?: string; checked: boolean; onChange: (checked: boolean) => void }) {
